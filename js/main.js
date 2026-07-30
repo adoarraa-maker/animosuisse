@@ -64,7 +64,7 @@ const STRIPE_PRODUCTS = {
     supplierSku: 'CJMY179795809IR',
     supplierVariant: '300ml Garbage Bag / Cherry Blossom Pink',
     supplier: 'CJ Dropshipping',
-    paymentLink: 'https://buy.stripe.com/fZueVe4AF83e4W31sfcAo06',
+    paymentLink: 'https://buy.stripe.com/5kQ8wQd7berC74b2wjcAo05',
   },
   'jouet-chat-interactif': {
     unitPrice: 19.9,

@@ -1,0 +1,10 @@
+node_modules/
+.env
+.DS_Store
+*_files/
+Gobelet*/
+gourdes-demo_files/
+gourdes-demo.mp4
+qr-marteder-textile.png
+
+images/video.mp4

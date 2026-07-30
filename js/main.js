@@ -63,6 +63,7 @@ const STRIPE_PRODUCTS = {
     supplierSku: 'CJMY179795809IR',
     supplierVariant: '300ml Garbage Bag / Cherry Blossom Pink',
     supplier: 'CJ Dropshipping',
+    paymentLink: 'https://buy.stripe.com/fZueVe4AF83e4W31sfcAo06',
   },
   'jouet-chat-interactif': {
     unitPrice: 19.9,
@@ -283,6 +284,30 @@ async function startStripeExpressCheckout(card, btn) {
   try {
     setCartFromProductCard(card);
     const payload = buildExpressCheckoutPayload(card);
+
+    // Redirection directe Payment Link (évite l’API Netlify sur GitHub Pages)
+    const directLink =
+      String(card.dataset.stripePaymentLink || '').trim() ||
+      getPaymentLinkForPayload(payload);
+    if (directLink) {
+      notifyOrderInBackground({
+        _subject: `Commande Stripe AnimoSuisse — ${card.dataset.productName || 'Article'}`,
+        channel: 'Stripe Payment Link',
+        product_id: card.dataset.productId || '',
+        product_name: card.dataset.productName || '',
+        product_price: card.dataset.productPrice || '',
+        supplier_sku: payload.items[0]?.supplierSku || '',
+        cj_sku: payload.items[0]?.supplierSku || '',
+        supplier: payload.items[0]?.supplier || '',
+        variant: payload.items[0]?.variantLabel || '',
+        shipping: payload.shipping,
+        payment: 'Stripe Payment Link',
+        payment_link: directLink,
+      });
+      redirectToStripe(directLink);
+      return;
+    }
+
     const session = await createStripeCheckoutSession(payload);
     notifyOrderInBackground({
       _subject: `Commande Stripe AnimoSuisse — ${card.dataset.productName || 'Article'}`,

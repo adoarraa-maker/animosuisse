@@ -1,23 +1,14 @@
 /**
  * Configuration Stripe AnimoSuisse (chargée AVANT js/main.js).
  *
- * GitHub Pages ne peut PAS exécuter Netlify Functions.
- * Deux options pour que « Commander maintenant » ouvre Stripe :
- *
- * A) Payment Links (recommandé sur GitHub Pages)
- *    Dashboard Stripe → Produits / Payment Links → créer 1 lien par article
- *    puis coller les URL buy.stripe.com ci-dessous.
- *
- * B) API Checkout Session (Netlify)
- *    Déployer ce repo sur Netlify, ajouter STRIPE_SECRET_KEY (sk_live_…),
- *    puis renseigner ANIMO_STRIPE_CHECKOUT_URL avec l’URL de la fonction.
+ * GitHub Pages : utiliser les Payment Links buy.stripe.com ci-dessous.
+ * Option Netlify : ANIMO_STRIPE_CHECKOUT_URL + STRIPE_SECRET_KEY.
  */
 window.ANIMO_STRIPE_PAYMENT_LINKS = window.ANIMO_STRIPE_PAYMENT_LINKS || {
-  // Exemple : 'https://buy.stripe.com/xxxx'
+  // Brosse : coller le Payment Link dès qu'il est créé dans le Dashboard Stripe
   'brosse-vapeur': '',
-  'gourde-chien-3en1': '',
+  'gourde-chien-3en1': 'https://buy.stripe.com/fZueVe4AF83e4W31sfcAo06',
   'jouet-chat-interactif': '',
 };
 
-// Exemple Netlify : 'https://VOTRE-SITE.netlify.app/.netlify/functions/create-checkout-session'
 window.ANIMO_STRIPE_CHECKOUT_URL = window.ANIMO_STRIPE_CHECKOUT_URL || '';

@@ -21,6 +21,8 @@ const products = {
   'brosse-vapeur': {
     name: 'Brosse Vapeur 3-en-1 pour Chats et Chiens',
     price: 24.9,
+    supplierSku: 'ANIMO-BROSSE-VAPEUR-3EN1',
+    supplier: 'AnimoSuisse',
     stripeProduct: 'brosse-vapeur',
   },
   'gourde-chien-3en1': {
@@ -52,6 +54,8 @@ const STRIPE_PRODUCTS = {
   'brosse-vapeur': {
     unitPrice: 24.9,
     label: 'Brosse Vapeur 3-en-1 pour Chats et Chiens',
+    supplierSku: 'ANIMO-BROSSE-VAPEUR-3EN1',
+    supplier: 'AnimoSuisse',
   },
   'gourde-chien-3en1': {
     unitPrice: 29.9,
@@ -71,17 +75,42 @@ const STRIPE_PRODUCTS = {
 /**
  * URL de l'API qui crée la Checkout Session Stripe.
  * - Sur Netlify : chemins relatifs ci-dessous.
- * - Sinon : définir window.MARTEDER_STRIPE_CHECKOUT_URL avant main.js.
+ * - Sur GitHub Pages : définir window.ANIMO_STRIPE_CHECKOUT_URL (API absolue)
+ *   ou window.ANIMO_STRIPE_PAYMENT_LINKS (buy.stripe.com).
  */
+function isGitHubPagesHost() {
+  try {
+    return /\.github\.io$/i.test(window.location.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function getConfiguredCheckoutApiUrl() {
+  return (
+    window.ANIMO_STRIPE_CHECKOUT_URL ||
+    window.MARTEDER_STRIPE_CHECKOUT_URL ||
+    ''
+  ).trim();
+}
+
 const STRIPE_CHECKOUT_API_URL =
-  window.MARTEDER_STRIPE_CHECKOUT_URL ||
+  getConfiguredCheckoutApiUrl() ||
   '/.netlify/functions/create-checkout-session';
 
-const STRIPE_CHECKOUT_API_FALLBACKS = [
-  STRIPE_CHECKOUT_API_URL,
-  '/api/create-checkout-session',
-  '/.netlify/functions/create-checkout-session',
-].filter((url, index, list) => url && list.indexOf(url) === index);
+function getStripeCheckoutApiFallbacks() {
+  const list = [];
+  const configured = getConfiguredCheckoutApiUrl();
+  if (configured) list.push(configured);
+
+  // Sur GitHub Pages, les chemins Netlify relatifs ne marchent jamais.
+  if (!isGitHubPagesHost()) {
+    list.push('/.netlify/functions/create-checkout-session');
+    list.push('/api/create-checkout-session');
+  }
+
+  return list.filter((url, index, arr) => url && arr.indexOf(url) === index);
+}
 
 const STRIPE_PENDING_KEY = 'marteder-stripe-pending';
 const TWINT_NUMBER = '+41 76 842 96 83';
@@ -854,6 +883,50 @@ function getSiteOriginPath() {
   }
 }
 
+function getPaymentLinkForPayload(payload) {
+  const items = Array.isArray(payload?.items) ? payload.items : [];
+  if (items.length !== 1) return '';
+
+  const productKey = items[0].productKey;
+  if (!productKey) return '';
+
+  const fromWindow = window.ANIMO_STRIPE_PAYMENT_LINKS?.[productKey];
+  const fromCatalog = STRIPE_PRODUCTS[productKey]?.paymentLink;
+  const fromCard =
+    typeof document !== 'undefined'
+      ? document.querySelector(`[data-product-id="${productKey}"]`)?.dataset?.stripePaymentLink
+      : '';
+  const raw = String(fromWindow || fromCatalog || fromCard || '').trim();
+  if (!raw || !/^https?:\/\//i.test(raw)) return '';
+
+  try {
+    const url = new URL(raw);
+    const sku =
+      items[0].supplierSku ||
+      STRIPE_PRODUCTS[productKey]?.supplierSku ||
+      '';
+    const variant =
+      items[0].variantLabel ||
+      STRIPE_PRODUCTS[productKey]?.supplierVariant ||
+      '';
+    const ref = [productKey, sku, variant].filter(Boolean).join('|').slice(0, 200);
+    if (ref) url.searchParams.set('client_reference_id', ref);
+    return url.toString();
+  } catch {
+    return raw;
+  }
+}
+
+function buildPaymentLinkSession(payload) {
+  const url = getPaymentLinkForPayload(payload);
+  if (!url) return null;
+  return {
+    id: `plink_${payload.items[0].productKey}`,
+    url,
+    source: 'payment_link',
+  };
+}
+
 async function createStripeCheckoutSession(customPayload = null) {
   const isExpress = Boolean(customPayload?.express);
   const plan = isExpress
@@ -894,9 +967,16 @@ async function createStripeCheckoutSession(customPayload = null) {
     console.error('sessionStorage order', error);
   }
 
-  let lastError = 'Impossible de créer le paiement Stripe.';
+  // Sur GitHub Pages / sans API : Payment Link direct (buy.stripe.com)
+  if (isExpress || payload.items.length === 1) {
+    const linkSession = buildPaymentLinkSession(payload);
+    if (linkSession) return linkSession;
+  }
 
-  for (const endpoint of STRIPE_CHECKOUT_API_FALLBACKS) {
+  let lastError = 'Impossible de créer le paiement Stripe.';
+  const endpoints = getStripeCheckoutApiFallbacks();
+
+  for (const endpoint of endpoints) {
     let response;
     try {
       response = await fetch(endpoint, {
@@ -913,30 +993,58 @@ async function createStripeCheckoutSession(customPayload = null) {
       continue;
     }
 
+    const contentType = response.headers.get('content-type') || '';
     let data = {};
-    try {
-      data = await response.json();
-    } catch {
-      data = {};
+    if (contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+    } else {
+      // GitHub Pages renvoie souvent du HTML 200 pour les chemins inconnus
+      try {
+        await response.text();
+      } catch {
+        /* ignore */
+      }
+      lastError =
+        'API Stripe indisponible sur GitHub Pages. Ajoutez un Payment Link (js/stripe-config.js) ou déployez Netlify.';
+      continue;
     }
 
     if (response.ok && data.url) {
       return data;
     }
 
-    if (response.status === 404) {
+    if (response.status === 404 || response.status === 405) {
       lastError =
-        'API de paiement introuvable sur ce déploiement. Configurez Netlify Functions ou MARTEDER_STRIPE_CHECKOUT_URL.';
+        'API de paiement introuvable. Configurez Netlify Functions, ANIMO_STRIPE_CHECKOUT_URL ou un Payment Link.';
       continue;
     }
 
+    if (data.error) {
+      lastError = data.error;
+      break;
+    }
+
     lastError =
-      data.error ||
-      (response.status === 500
+      response.status === 500
         ? 'Erreur serveur Stripe. Vérifiez STRIPE_SECRET_KEY (sk_live_…) sur Netlify.'
-        : 'Impossible de créer le paiement Stripe.');
-    // Erreur métier / config : inutile d'essayer un autre endpoint
-    break;
+        : 'Impossible de créer le paiement Stripe.';
+  }
+
+  // Dernier recours : Payment Link même pour paniers multi-articles (1er article)
+  const linkFallback = buildPaymentLinkSession({
+    ...payload,
+    items: payload.items.slice(0, 1),
+  });
+  if (linkFallback) return linkFallback;
+
+  if (isGitHubPagesHost() && !getConfiguredCheckoutApiUrl()) {
+    throw new Error(
+      'Paiement Stripe : créez un Payment Link dans le Dashboard Stripe et collez-le dans js/stripe-config.js, ou déployez le site sur Netlify avec STRIPE_SECRET_KEY.'
+    );
   }
 
   throw new Error(lastError);

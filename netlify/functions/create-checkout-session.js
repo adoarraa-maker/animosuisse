@@ -20,6 +20,8 @@ const CATALOG = {
   'brosse-vapeur': {
     name: 'Brosse Vapeur 3-en-1 pour Chats et Chiens',
     unitAmountCents: 2490,
+    supplierSku: 'ANIMO-BROSSE-VAPEUR-3EN1',
+    supplier: 'AnimoSuisse',
   },
   'gourde-chien-3en1': {
     name: 'Gourde Multifonction 3-en-1 pour Chien (Eau, Croquettes & Sacs)',
@@ -178,6 +180,18 @@ exports.handler = async (event) => {
   if (address) params.set('metadata[customer_address]', address);
   params.set('metadata[shipping]', shippingKey);
   params.set('metadata[checkout_mode]', body.express ? 'express' : 'cart');
+  params.set(
+    'metadata[product_names]',
+    sanitizeText(
+      items
+        .map((raw) => {
+          const key = sanitizeText(raw.productKey, 40);
+          return CATALOG[key]?.name || key;
+        })
+        .join(' | '),
+      480
+    )
+  );
   if (name) params.set('payment_intent_data[metadata][customer_name]', name);
   if (phone) params.set('payment_intent_data[metadata][customer_phone]', phone);
   params.set('payment_intent_data[metadata][shipping]', shippingKey);

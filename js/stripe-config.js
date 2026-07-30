@@ -1,6 +1,11 @@
 /**
  * Configuration Stripe AnimoSuisse (chargée AVANT js/main.js).
- * Payment Links buy.stripe.com → redirection directe depuis « Commander maintenant ».
+ *
+ * Panier multi-articles :
+ * - 1 type d’article → Payment Link (avec ?quantity=) sur GitHub Pages
+ * - plusieurs types → Checkout Session via Netlify (ANIMO_STRIPE_CHECKOUT_URL)
+ *
+ * Payment Links buy.stripe.com :
  */
 window.ANIMO_STRIPE_PAYMENT_LINKS = window.ANIMO_STRIPE_PAYMENT_LINKS || {
   'brosse-vapeur': 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
@@ -8,4 +13,5 @@ window.ANIMO_STRIPE_PAYMENT_LINKS = window.ANIMO_STRIPE_PAYMENT_LINKS || {
   'jouet-chat-interactif': 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
 };
 
+// Ex. : 'https://VOTRE-SITE.netlify.app/.netlify/functions/create-checkout-session'
 window.ANIMO_STRIPE_CHECKOUT_URL = window.ANIMO_STRIPE_CHECKOUT_URL || '';

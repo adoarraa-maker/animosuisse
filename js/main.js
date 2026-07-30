@@ -254,7 +254,7 @@ function setCartFromProductCard(card) {
   const productId = card.dataset.productId || '';
   const catalog = products[productId];
   if (!catalog) return;
-  const { sku, supplier } = getSupplierMeta(productId, card);
+  const { sku, supplier, variant } = getSupplierMeta(productId, card);
   const zoneKey = card.querySelector('[data-shipping-select]')?.value || 'suisse';
   const checkoutShipping = document.getElementById('checkoutShipping');
   if (checkoutShipping) checkoutShipping.value = zoneKey;
@@ -264,7 +264,7 @@ function setCartFromProductCard(card) {
       name: catalog.name,
       displayName: catalog.name,
       variantKey: 'default',
-      variantLabel: getSupplierMeta(productId, card).variant || '',
+      variantLabel: variant || '',
       price: catalog.price,
       quantity: 1,
       stripeProduct: catalog.stripeProduct || productId,
@@ -277,64 +277,37 @@ function setCartFromProductCard(card) {
   saveCart();
 }
 
-async function startStripeExpressCheckout(card, btn) {
-  const previousLabel = btn.textContent;
-  btn.disabled = true;
-  btn.classList.add('is-loading');
-  btn.textContent = 'Redirection vers Stripe…';
-
-  try {
-    setCartFromProductCard(card);
-    const payload = buildExpressCheckoutPayload(card);
-
-    // Redirection directe Payment Link (évite l’API Netlify sur GitHub Pages)
-    const directLink =
-      String(card.dataset.stripePaymentLink || '').trim() ||
-      getPaymentLinkForPayload(payload);
-    if (directLink) {
-      notifyOrderInBackground({
-        _subject: `Commande Stripe AnimoSuisse — ${card.dataset.productName || 'Article'}`,
-        channel: 'Stripe Payment Link',
-        product_id: card.dataset.productId || '',
-        product_name: card.dataset.productName || '',
-        product_price: card.dataset.productPrice || '',
-        supplier_sku: payload.items[0]?.supplierSku || '',
-        cj_sku: payload.items[0]?.supplierSku || '',
-        supplier: payload.items[0]?.supplier || '',
-        variant: payload.items[0]?.variantLabel || '',
-        shipping: payload.shipping,
-        payment: 'Stripe Payment Link',
-        payment_link: directLink,
-      });
-      redirectToStripe(directLink);
-      return;
-    }
-
-    const session = await createStripeCheckoutSession(payload);
-    notifyOrderInBackground({
-      _subject: `Commande Stripe AnimoSuisse — ${card.dataset.productName || 'Article'}`,
-      channel: 'Stripe Express Checkout',
-      product_id: card.dataset.productId || '',
-      product_name: card.dataset.productName || '',
-      product_price: card.dataset.productPrice || '',
-      supplier_sku: payload.items[0]?.supplierSku || '',
-      cj_sku: payload.items[0]?.supplierSku || '',
-      supplier: payload.items[0]?.supplier || '',
-      shipping: payload.shipping,
-      stripe_session_id: session.id || '',
-      payment: 'Stripe Checkout Session',
-    });
-    redirectToStripe(session.url);
-  } catch (error) {
-    console.error('express stripe checkout', error);
-    showToast(error.message || 'Paiement Stripe indisponible. Réessayez dans un instant.');
-    btn.disabled = false;
-    btn.classList.remove('is-loading');
-    btn.textContent = previousLabel;
+function addProductCardToCart(card) {
+  const productId = card.dataset.productId || '';
+  const catalog = products[productId];
+  if (!catalog) {
+    throw new Error('Produit introuvable.');
   }
+  if (isOutOfStockProduct(productId, catalog.name)) {
+    throw new Error('Ce produit est en rupture de stock.');
+  }
+
+  const { sku, supplier, variant } = getSupplierMeta(productId, card);
+  const zoneKey = card.querySelector('[data-shipping-select]')?.value || 'suisse';
+  const checkoutShipping = document.getElementById('checkoutShipping');
+  if (checkoutShipping && cart.length === 0) {
+    checkoutShipping.value = zoneKey;
+  }
+
+  addToCart({
+    name: catalog.name,
+    displayName: catalog.name,
+    variantKey: productId,
+    variantLabel: variant || '',
+    price: catalog.price,
+    stripeProduct: catalog.stripeProduct || productId,
+    supplierSku: sku,
+    supplier,
+    productId,
+  });
 }
 
-function initStripeProductOrders() {
+function initProductAddToCart() {
   document.querySelectorAll('.product-card[data-product-price]').forEach((card) => {
     updateProductOrderSummary(card);
     const select = card.querySelector('[data-shipping-select]');
@@ -342,17 +315,67 @@ function initStripeProductOrders() {
   });
 
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-order-stripe');
+    const btn = e.target.closest('.btn-add-to-cart, .btn-order-stripe');
     if (!btn || btn.disabled) return;
     e.preventDefault();
     const card = btn.closest('.product-card');
     if (!card) return;
-    if (isOutOfStockProduct(card.dataset.productId, card.dataset.productName)) {
-      showToast('Ce produit est en rupture de stock.');
-      return;
+    try {
+      addProductCardToCart(card);
+    } catch (error) {
+      showToast(error.message || 'Impossible d’ajouter au panier.');
     }
-    startStripeExpressCheckout(card, btn);
   });
+}
+
+async function startCartStripeCheckout(triggerBtn) {
+  const plan = getStripePaymentPlan();
+  if (!plan.canCheckout) {
+    throw new Error(plan.note || 'Paiement Stripe indisponible pour ce panier.');
+  }
+
+  const previousLabel = triggerBtn?.textContent;
+  if (triggerBtn) {
+    triggerBtn.disabled = true;
+    triggerBtn.classList.add('is-loading');
+    triggerBtn.textContent = 'Redirection vers Stripe…';
+  }
+
+  try {
+    const payload = buildCheckoutSessionPayload();
+    payload.express = true;
+    payload.collectShippingAddress = true;
+    // Formulaire panier facultatif : on envoie les infos si déjà saisies
+    const customer = getCheckoutCustomer();
+    if (customer.email) payload.email = customer.email;
+    if (customer.name) payload.name = customer.name;
+    if (customer.phone) payload.phone = customer.phone;
+    if (customer.address) payload.address = customer.address;
+
+    const session = await createStripeCheckoutSession(payload);
+    notifyOrderInBackground({
+      _subject: `Commande panier AnimoSuisse — ${formatPrice(plan.total)}`,
+      channel: session.source === 'payment_link' ? 'Stripe Payment Link' : 'Stripe Checkout Session',
+      name: customer.name || '',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      address: customer.address || '',
+      shipping: getShippingLabel(payload.shipping),
+      order: formatCartSummary(),
+      supplier_skus: getCartSupplierSkuSummary(),
+      total: formatPrice(plan.total),
+      payment: session.source === 'payment_link' ? 'Stripe Payment Link' : 'Stripe Checkout Session',
+      stripe_session_id: session.id || '',
+    });
+    redirectToStripe(session.url);
+  } catch (error) {
+    if (triggerBtn) {
+      triggerBtn.disabled = cart.length === 0;
+      triggerBtn.classList.remove('is-loading');
+      triggerBtn.textContent = previousLabel || 'Passer à la caisse';
+    }
+    throw error;
+  }
 }
 
 const TISSUS_SCHWER = 'images/tissus';
@@ -912,10 +935,16 @@ function getSiteOriginPath() {
 
 function getPaymentLinkForPayload(payload) {
   const items = Array.isArray(payload?.items) ? payload.items : [];
-  if (items.length !== 1) return '';
+  if (!items.length) return '';
 
-  const productKey = items[0].productKey;
-  if (!productKey) return '';
+  const productKeys = [...new Set(items.map((item) => item.productKey).filter(Boolean))];
+  // Payment Link = un seul type d’article (quantité variable OK)
+  if (productKeys.length !== 1) return '';
+
+  const productKey = productKeys[0];
+  const quantity = items
+    .filter((item) => item.productKey === productKey)
+    .reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
 
   const fromWindow = window.ANIMO_STRIPE_PAYMENT_LINKS?.[productKey];
   const fromCatalog = STRIPE_PRODUCTS[productKey]?.paymentLink;
@@ -928,6 +957,7 @@ function getPaymentLinkForPayload(payload) {
 
   try {
     const url = new URL(raw);
+    url.searchParams.set('quantity', String(Math.min(99, quantity)));
     const sku =
       items[0].supplierSku ||
       STRIPE_PRODUCTS[productKey]?.supplierSku ||
@@ -936,7 +966,7 @@ function getPaymentLinkForPayload(payload) {
       items[0].variantLabel ||
       STRIPE_PRODUCTS[productKey]?.supplierVariant ||
       '';
-    const ref = [productKey, sku, variant].filter(Boolean).join('|').slice(0, 200);
+    const ref = [productKey, sku, variant, `x${quantity}`].filter(Boolean).join('|').slice(0, 200);
     if (ref) url.searchParams.set('client_reference_id', ref);
     return url.toString();
   } catch {
@@ -994,8 +1024,8 @@ async function createStripeCheckoutSession(customPayload = null) {
     console.error('sessionStorage order', error);
   }
 
-  // Sur GitHub Pages / sans API : Payment Link direct (buy.stripe.com)
-  if (isExpress || payload.items.length === 1) {
+  // Sur GitHub Pages / sans API : Payment Link si le panier = 1 seul type d’article
+  {
     const linkSession = buildPaymentLinkSession(payload);
     if (linkSession) return linkSession;
   }
@@ -1029,14 +1059,13 @@ async function createStripeCheckoutSession(customPayload = null) {
         data = {};
       }
     } else {
-      // GitHub Pages renvoie souvent du HTML 200 pour les chemins inconnus
       try {
         await response.text();
       } catch {
         /* ignore */
       }
       lastError =
-        'API Stripe indisponible sur GitHub Pages. Ajoutez un Payment Link (js/stripe-config.js) ou déployez Netlify.';
+        'API Stripe indisponible sur GitHub Pages. Pour un panier multi-produits, configurez Netlify (ANIMO_STRIPE_CHECKOUT_URL).';
       continue;
     }
 
@@ -1046,7 +1075,7 @@ async function createStripeCheckoutSession(customPayload = null) {
 
     if (response.status === 404 || response.status === 405) {
       lastError =
-        'API de paiement introuvable. Configurez Netlify Functions, ANIMO_STRIPE_CHECKOUT_URL ou un Payment Link.';
+        'API de paiement introuvable. Configurez Netlify Functions ou ANIMO_STRIPE_CHECKOUT_URL pour les paniers multi-produits.';
       continue;
     }
 
@@ -1061,16 +1090,22 @@ async function createStripeCheckoutSession(customPayload = null) {
         : 'Impossible de créer le paiement Stripe.';
   }
 
-  // Dernier recours : Payment Link même pour paniers multi-articles (1er article)
-  const linkFallback = buildPaymentLinkSession({
-    ...payload,
-    items: payload.items.slice(0, 1),
-  });
+  // Ne jamais payer seulement le 1er article d’un panier mixte
+  const linkFallback = buildPaymentLinkSession(payload);
   if (linkFallback) return linkFallback;
+
+  const distinctProducts = [
+    ...new Set((payload.items || []).map((item) => item.productKey).filter(Boolean)),
+  ];
+  if (distinctProducts.length > 1) {
+    throw new Error(
+      'Panier multi-produits : déployez Netlify avec STRIPE_SECRET_KEY, ou payez un type d’article à la fois.'
+    );
+  }
 
   if (isGitHubPagesHost() && !getConfiguredCheckoutApiUrl()) {
     throw new Error(
-      'Paiement Stripe : créez un Payment Link dans le Dashboard Stripe et collez-le dans js/stripe-config.js, ou déployez le site sur Netlify avec STRIPE_SECRET_KEY.'
+      'Paiement Stripe : ajoutez un Payment Link dans js/stripe-config.js, ou déployez Netlify avec STRIPE_SECRET_KEY.'
     );
   }
 
@@ -1165,10 +1200,10 @@ function updateCheckoutButton() {
 
   if (checkoutBtn) {
     checkoutBtn.disabled = cart.length === 0;
-    checkoutBtn.textContent = 'Continuer vers le paiement';
+    checkoutBtn.textContent = 'Passer à la caisse';
   }
   if (note && !note.classList.contains('hidden')) {
-    note.textContent = plan.note;
+    note.textContent = plan.note || 'Vérifiez votre panier, puis payez en toute sécurité via Stripe.';
   }
 }
 
@@ -1184,8 +1219,9 @@ function renderCart() {
     cartList.innerHTML = cart.map((item, index) => `
       <div class="cart-item">
         <div class="cart-item-info">
-          <p class="cart-item-name">${item.name}</p>
-          ${item.variantLabel ? `<p class="cart-item-variant">${item.variantType || 'Variante'} : <strong>${item.variantLabel}</strong></p>` : ''}
+          <p class="cart-item-name">${item.displayName || item.name}</p>
+          ${item.variantLabel ? `<p class="cart-item-variant">Variante : <strong>${item.variantLabel}</strong></p>` : ''}
+          ${item.supplierSku ? `<p class="cart-item-note">SKU : ${item.supplierSku}</p>` : ''}
           ${item.packNote ? `<p class="cart-item-note">${item.packNote}</p>` : ''}
         </div>
         <div class="cart-item-meta">
@@ -1213,20 +1249,24 @@ function renderCart() {
 }
 
 function addToCart(item) {
-  const existing = cart.find(
-    (entry) => entry.name === item.name && entry.variantKey === item.variantKey,
-  );
+  const existing = cart.find((entry) => {
+    if (item.productId && entry.productId) return entry.productId === item.productId;
+    if (item.stripeProduct && entry.stripeProduct) {
+      return entry.stripeProduct === item.stripeProduct && entry.variantKey === item.variantKey;
+    }
+    return entry.name === item.name && entry.variantKey === item.variantKey;
+  });
 
   if (existing) {
-    existing.quantity += 1;
+    existing.quantity += item.quantity && item.quantity > 0 ? item.quantity : 1;
   } else {
-    cart.push({ ...item, quantity: 1 });
+    cart.push({ ...item, quantity: item.quantity && item.quantity > 0 ? item.quantity : 1 });
   }
 
   renderCart();
   saveCart();
   openCartPanel();
-  showToast(`« ${item.displayName} » ajouté au panier`);
+  showToast(`« ${item.displayName || item.name} » ajouté au panier`);
 }
 
 function getFabricVariantKey(card) {
@@ -1318,7 +1358,7 @@ function initCart() {
     if (!btn) return;
 
     e.preventDefault();
-    showToast('Utilisez « Commander maintenant » pour payer via Stripe.');
+    showToast('Utilisez « Ajouter au panier », puis passez à la caisse.');
   });
 }
 
@@ -1580,26 +1620,29 @@ function initCartCheckout() {
     updateCheckoutButton();
   });
 
-  checkoutBtn.addEventListener('click', () => {
+  checkoutBtn.addEventListener('click', async () => {
     if (cart.length === 0) return;
     updateCheckoutButton();
-    showCheckoutForm(true);
+
+    // Panier → Stripe directement (tous les articles + quantités)
+    try {
+      await startCartStripeCheckout(checkoutBtn);
+    } catch (error) {
+      console.error('cart checkout', error);
+      // Si l’API multi-produits échoue, proposer le formulaire classique
+      showToast(error.message || 'Paiement Stripe indisponible.');
+      showCheckoutForm(true);
+    }
   });
 
   cancelBtn?.addEventListener('click', () => showCheckoutForm(false));
 
-  // Bouton Stripe → Checkout Session (montant exact du panier)
+  // Bouton Stripe du formulaire (coordonnées) → même panier complet
   updateStripePayLink();
 
   stripePayLink?.addEventListener('click', async (e) => {
     e.preventDefault();
     if (cart.length === 0 || stripePayLink.classList.contains('is-disabled')) return;
-
-    const formError = validateCheckoutForm();
-    if (formError) {
-      showToast(formError);
-      return;
-    }
 
     const previousLabel = stripePayLink.textContent;
     stripePayLink.classList.add('is-disabled');
@@ -1607,26 +1650,7 @@ function initCartCheckout() {
     stripePayLink.textContent = 'Redirection vers Stripe…';
 
     try {
-      const customer = getCheckoutCustomer();
-      const plan = getStripePaymentPlan();
-      const session = await createStripeCheckoutSession();
-
-      // Notification boutique seulement après création réussie de la session
-      notifyOrderInBackground({
-        _subject: `Commande AnimoSuisse — ${formatPrice(plan.total)}`,
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-        address: customer.address,
-        shipping: getShippingLabel(),
-        order: formatCartSummary(),
-        supplier_skus: getCartSupplierSkuSummary(),
-        total: formatPrice(plan.total),
-        payment: 'Stripe Checkout Session',
-        stripe_session_id: session.id || '',
-      });
-
-      redirectToStripe(session.url);
+      await startCartStripeCheckout(stripePayLink);
     } catch (error) {
       console.error('stripe checkout', error);
       showToast(error.message || 'Paiement Stripe indisponible. Réessayez ou contactez-nous.');
@@ -1957,7 +1981,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCart();
   initCartPanel();
   initCartCheckout();
-  initStripeProductOrders();
+  initProductAddToCart();
   initContactForm();
   initFabricVariants();
   initMecheVariant();

@@ -100,9 +100,9 @@
             <p class="cart-panel-total">Total : <strong id="cartTotal">0 CHF</strong></p>
           </div>
           <button type="button" class="btn btn-cart cart-checkout-btn" id="cartCheckoutBtn" disabled>
-            Continuer vers le paiement
+            Passer à la caisse
           </button>
-          <p class="cart-checkout-note">Choisissez ensuite votre livraison et payez par carte (Stripe).</p>
+          <p class="cart-checkout-note">Ajoutez vos articles, ajustez les quantités, puis payez le panier via Stripe.</p>
           <form class="cart-checkout-form hidden" id="cartCheckoutForm" novalidate>
             <p class="cart-checkout-form-title">Coordonnées pour finaliser le paiement</p>
             <label class="form-label" for="checkoutName">Nom complet</label>
@@ -278,9 +278,9 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-order-stripe"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
                   data-id="brosse-vapeur"
-                >Commander maintenant</button>
+                >Ajouter au panier</button>
                 <div class="payment-methods payment-methods--compact" aria-label="Moyens de paiement acceptés">
                   <div class="payment-methods-icons">
                     <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
@@ -296,7 +296,7 @@
                       <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#003087"/><text x="24" y="20" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="9" font-weight="700">PayPal</text></svg>
                     </span>
                   </div>
-                  <p class="payment-methods-note">Paiement sécurisé Stripe · Carte · Apple Pay · Google Pay</p>
+                  <p class="payment-methods-note">Ajoutez au panier · Paiement Stripe sécurisé</p>
                 </div>
               </div>
             </div>
@@ -368,9 +368,9 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-order-stripe"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
                   data-id="gourde-chien-3en1"
-                >Commander maintenant</button>
+                >Ajouter au panier</button>
                 <div class="payment-methods payment-methods--compact" aria-label="Moyens de paiement acceptés">
                   <div class="payment-methods-icons">
                     <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
@@ -386,7 +386,7 @@
                       <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#003087"/><text x="24" y="20" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="9" font-weight="700">PayPal</text></svg>
                     </span>
                   </div>
-                  <p class="payment-methods-note">Paiement sécurisé Stripe · Carte · Apple Pay · Google Pay</p>
+                  <p class="payment-methods-note">Ajoutez au panier · Paiement Stripe sécurisé</p>
                 </div>
               </div>
             </div>
@@ -455,9 +455,9 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-order-stripe"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
                   data-id="jouet-chat-interactif"
-                >Commander maintenant</button>
+                >Ajouter au panier</button>
                 <div class="payment-methods payment-methods--compact" aria-label="Moyens de paiement acceptés">
                   <div class="payment-methods-icons">
                     <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
@@ -473,7 +473,7 @@
                       <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#003087"/><text x="24" y="20" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="9" font-weight="700">PayPal</text></svg>
                     </span>
                   </div>
-                  <p class="payment-methods-note">Paiement sécurisé Stripe · Carte · Apple Pay · Google Pay</p>
+                  <p class="payment-methods-note">Ajoutez au panier · Paiement Stripe sécurisé</p>
                 </div>
               </div>
             </div>
@@ -805,7 +805,7 @@
     ▲
   </button>
 
-  <script src="js/stripe-config.js?v=20260731-gourde-plink2"></script>
-  <script src="js/main.js?v=20260731-gourde-plink2"></script>
+  <script src="js/stripe-config.js?v=20260731-cart-restore"></script>
+  <script src="js/main.js?v=20260731-cart-restore"></script>
 </body>
 </html>

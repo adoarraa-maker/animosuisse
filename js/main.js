@@ -30,6 +30,7 @@ function purgeOutOfStockFromCart() {
 }
 
 const products = {
+  'brosse-vapeur': { name: 'Brosse Vapeur 3-en-1 pour Chats et Chiens', price: 24.9 },
   'pull-noel-rennes': { name: 'Pull de Noël / Rennes pour chien', price: 24.9 },
   'caisse-transport': { name: 'Caisses de transport sécurisées', price: 49.9 },
   'distributeur-auto': { name: "Distributeur automatique d'eau et nourriture", price: 34.9 },

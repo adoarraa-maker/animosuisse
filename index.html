@@ -41,7 +41,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260731-gourde-3en1">
+  <link rel="stylesheet" href="css/styles.css?v=20260731-gourde-couleurs">
 </head>
 <body>
   <!-- Navigation -->
@@ -340,7 +340,7 @@
               <h3 class="product-name">Gourde Multifonction 3-en-1 pour Chien (Eau, Croquettes &amp; Sacs)</h3>
               <p class="product-description">
                 Gourde portable 3-en-1 pour les promenades : eau, croquettes et distributeur de sacs hygiéniques.
-                Variante Cherry Blossom Pink, capacité 300&nbsp;ml.
+                Choisissez votre couleur, capacité 300&nbsp;ml.
               </p>
               <ul class="product-features">
                 <li>Réservoir d’eau avec gamelle intégrée</li>
@@ -349,6 +349,86 @@
                 <li>Idéale pour balades et voyages</li>
               </ul>
               <div class="product-price"><span class="current">29.90 CHF</span></div>
+              <div class="fabric-variants product-color-variants" data-gourde-colors>
+                <p class="variant-label" id="gourdeColorLabel">Couleur</p>
+                <div class="color-swatch-list" role="listbox" aria-labelledby="gourdeColorLabel">
+                  <button
+                    type="button"
+                    class="color-swatch active"
+                    role="option"
+                    aria-selected="true"
+                    data-color-key="rose"
+                    data-color-label="Rose (Cherry Blossom Pink)"
+                    data-color-image="images/gourde-couleurs/gourde-rose.jpg"
+                    data-supplier-variant="300ml Garbage Bag / Cherry Blossom Pink"
+                    title="Rose"
+                    style="--swatch:#f4a7c0"
+                  ><span class="color-swatch-dot" aria-hidden="true"></span><span class="color-swatch-name">Rose</span></button>
+                  <button
+                    type="button"
+                    class="color-swatch"
+                    role="option"
+                    aria-selected="false"
+                    data-color-key="vert-fonce"
+                    data-color-label="Vert foncé"
+                    data-color-image="images/gourde-couleurs/gourde-vert-fonce.jpg"
+                    data-supplier-variant="300ml Garbage Bag / Dark Green"
+                    title="Vert foncé"
+                    style="--swatch:#1f5c45"
+                  ><span class="color-swatch-dot" aria-hidden="true"></span><span class="color-swatch-name">Vert foncé</span></button>
+                  <button
+                    type="button"
+                    class="color-swatch"
+                    role="option"
+                    aria-selected="false"
+                    data-color-key="bleu"
+                    data-color-label="Bleu marine"
+                    data-color-image="images/gourde-couleurs/gourde-bleu-marine.jpg"
+                    data-supplier-variant="300ml Garbage Bag / Dark Blue"
+                    title="Bleu marine"
+                    style="--swatch:#1a3a6b"
+                  ><span class="color-swatch-dot" aria-hidden="true"></span><span class="color-swatch-name">Bleu</span></button>
+                  <button
+                    type="button"
+                    class="color-swatch"
+                    role="option"
+                    aria-selected="false"
+                    data-color-key="gris"
+                    data-color-label="Gris / Jaune clair"
+                    data-color-image="images/gourde-couleurs/gourde-blanc.jpg"
+                    data-supplier-variant="300ml Garbage Bag / Light Grey"
+                    title="Gris"
+                    style="--swatch:#c5c8cc"
+                  ><span class="color-swatch-dot" aria-hidden="true"></span><span class="color-swatch-name">Gris</span></button>
+                  <button
+                    type="button"
+                    class="color-swatch"
+                    role="option"
+                    aria-selected="false"
+                    data-color-key="turquoise"
+                    data-color-label="Turquoise"
+                    data-color-image="images/gourde-couleurs/gourde-turquoise.jpg"
+                    data-supplier-variant="300ml Garbage Bag / Turquoise"
+                    title="Turquoise"
+                    style="--swatch:#2bb8c0"
+                  ><span class="color-swatch-dot" aria-hidden="true"></span><span class="color-swatch-name">Turquoise</span></button>
+                  <button
+                    type="button"
+                    class="color-swatch"
+                    role="option"
+                    aria-selected="false"
+                    data-color-key="orange"
+                    data-color-label="Orange / Jaune"
+                    data-color-image="images/gourde-couleurs/gourde-orange.jpg"
+                    data-supplier-variant="300ml Garbage Bag / Orange"
+                    title="Orange"
+                    style="--swatch:#f0a05a"
+                  ><span class="color-swatch-dot" aria-hidden="true"></span><span class="color-swatch-name">Orange</span></button>
+                </div>
+                <p class="variant-selected" data-gourde-color-preview>
+                  Couleur sélectionnée : <strong>Rose (Cherry Blossom Pink)</strong>
+                </p>
+              </div>
               <div class="fabric-variants product-shipping-box">
                 <label class="variant-label" for="gourdeShippingSelect">Adresse de livraison</label>
                 <select
@@ -805,7 +885,7 @@
     ▲
   </button>
 
-  <script src="js/stripe-config.js?v=20260731-cart-restore"></script>
-  <script src="js/main.js?v=20260731-cart-restore"></script>
+  <script src="js/stripe-config.js?v=20260731-gourde-couleurs"></script>
+  <script src="js/main.js?v=20260731-gourde-couleurs"></script>
 </body>
 </html>

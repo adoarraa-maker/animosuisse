@@ -158,6 +158,7 @@ function getShippingCostForZone(zoneKey, itemCount = 1) {
 
 function getSupplierMeta(productId, card) {
   const fromCatalog = productId && products[productId] ? products[productId] : null;
+  const activeColor = card?.querySelector?.('.color-swatch.active');
   const sku =
     card?.dataset?.supplierSku ||
     fromCatalog?.supplierSku ||
@@ -169,11 +170,15 @@ function getSupplierMeta(productId, card) {
     (productId && STRIPE_PRODUCTS[productId]?.supplier) ||
     '';
   const variant =
+    activeColor?.dataset?.supplierVariant ||
+    activeColor?.dataset?.colorLabel ||
     card?.dataset?.supplierVariant ||
     fromCatalog?.supplierVariant ||
     (productId && STRIPE_PRODUCTS[productId]?.supplierVariant) ||
     '';
-  return { sku, supplier, variant };
+  const colorKey = activeColor?.dataset?.colorKey || '';
+  const colorLabel = activeColor?.dataset?.colorLabel || '';
+  return { sku, supplier, variant, colorKey, colorLabel };
 }
 
 function buildProductWhatsAppMessage(card) {
@@ -287,23 +292,30 @@ function addProductCardToCart(card) {
     throw new Error('Ce produit est en rupture de stock.');
   }
 
-  const { sku, supplier, variant } = getSupplierMeta(productId, card);
+  const { sku, supplier, variant, colorKey, colorLabel } = getSupplierMeta(productId, card);
   const zoneKey = card.querySelector('[data-shipping-select]')?.value || 'suisse';
   const checkoutShipping = document.getElementById('checkoutShipping');
   if (checkoutShipping && cart.length === 0) {
     checkoutShipping.value = zoneKey;
   }
 
+  const displayName = colorLabel
+    ? `${catalog.name} — ${colorLabel}`
+    : catalog.name;
+
   addToCart({
     name: catalog.name,
-    displayName: catalog.name,
-    variantKey: productId,
-    variantLabel: variant || '',
+    displayName,
+    variantKey: colorKey ? `${productId}:${colorKey}` : productId,
+    variantLabel: variant || colorLabel || '',
+    variantType: colorLabel ? 'Couleur' : '',
     price: catalog.price,
     stripeProduct: catalog.stripeProduct || productId,
     supplierSku: sku,
     supplier,
     productId,
+    colorKey: colorKey || '',
+    colorLabel: colorLabel || '',
   });
 }
 
@@ -1220,7 +1232,7 @@ function renderCart() {
       <div class="cart-item">
         <div class="cart-item-info">
           <p class="cart-item-name">${item.displayName || item.name}</p>
-          ${item.variantLabel ? `<p class="cart-item-variant">Variante : <strong>${item.variantLabel}</strong></p>` : ''}
+          ${item.variantLabel ? `<p class="cart-item-variant">${item.variantType || 'Variante'} : <strong>${item.variantLabel}</strong></p>` : ''}
           ${item.supplierSku ? `<p class="cart-item-note">SKU : ${item.supplierSku}</p>` : ''}
           ${item.packNote ? `<p class="cart-item-note">${item.packNote}</p>` : ''}
         </div>
@@ -1965,6 +1977,7 @@ function initProductThumbs() {
         if (!src) return;
         mainImage.src = src;
         if (alt) mainImage.alt = alt;
+        // Ne pas écraser une couleur choisie tant que l’utilisateur reste sur la galerie
         thumbs.forEach((item) => {
           const isActive = item === thumb;
           item.classList.toggle('active', isActive);
@@ -1972,6 +1985,55 @@ function initProductThumbs() {
         });
       });
     });
+  });
+}
+
+function initGourdeColorVariants() {
+  document.querySelectorAll('[data-gourde-colors]').forEach((box) => {
+    const card = box.closest('.product-card');
+    if (!card) return;
+    const mainImage = card.querySelector('[data-product-main]');
+    const preview = box.querySelector('[data-gourde-color-preview]');
+    const swatches = Array.from(box.querySelectorAll('.color-swatch'));
+
+    const applyColor = (swatch) => {
+      if (!swatch) return;
+      const imageSrc = swatch.dataset.colorImage;
+      const label = swatch.dataset.colorLabel || swatch.title || 'Couleur';
+      const supplierVariant = swatch.dataset.supplierVariant || label;
+
+      swatches.forEach((item) => {
+        const isActive = item === swatch;
+        item.classList.toggle('active', isActive);
+        item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      if (mainImage && imageSrc) {
+        mainImage.src = imageSrc;
+        mainImage.alt = `Gourde Multifonction 3-en-1 — ${label}`;
+      }
+
+      card.dataset.supplierVariant = supplierVariant;
+      card.dataset.selectedColor = swatch.dataset.colorKey || '';
+      card.dataset.selectedColorLabel = label;
+
+      if (preview) {
+        preview.innerHTML = `Couleur sélectionnée : <strong>${label}</strong>`;
+      }
+
+      // Désactiver l’état actif des miniatures galerie (la couleur prime)
+      card.querySelectorAll('.product-thumb').forEach((thumb) => {
+        thumb.classList.remove('active');
+        thumb.setAttribute('aria-selected', 'false');
+      });
+    };
+
+    swatches.forEach((swatch) => {
+      swatch.addEventListener('click', () => applyColor(swatch));
+    });
+
+    const initial = box.querySelector('.color-swatch.active') || swatches[0];
+    applyColor(initial);
   });
 }
 
@@ -1995,6 +2057,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initNewsletter();
   initHeroCoverSlideshow();
   initProductThumbs();
+  initGourdeColorVariants();
 
   try {
     const params = new URLSearchParams(window.location.search);

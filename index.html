@@ -40,7 +40,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260730-collection-jouet-chat">
+  <link rel="stylesheet" href="css/styles.css?v=20260730-stock-epuise">
 </head>
 <body>
   <!-- Navigation -->
@@ -437,7 +437,7 @@
           </article>
 
           <article
-            class="product-card"
+            class="product-card is-out-of-stock"
             data-category="vetements"
             data-product-id="costumes-chiens"
             data-product-name="Costumes et tenues amusantes pour chiens"
@@ -451,7 +451,7 @@
                 loading="lazy"
                 decoding="async"
               >
-              <span class="product-badge new">Nouveau</span>
+              <span class="product-badge sold-out">Épuisé</span>
             </div>
             <div class="product-info">
               <p class="product-category">Vêtements</p>
@@ -472,6 +472,7 @@
                   id="costumesShippingSelect"
                   data-shipping-select
                   aria-label="Choisir l'adresse de livraison"
+                  disabled
                 >
                   <option value="suisse" selected>Suisse — Gratuit (0.00 CHF)</option>
                   <option value="europe">Europe — 9.90 CHF</option>
@@ -484,9 +485,11 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-order-whatsapp"
+                  class="btn btn-cart product-cart-btn btn-stock-out"
                   data-id="costumes-chiens"
-                >Commander maintenant</button>
+                  disabled
+                  aria-disabled="true"
+                >Épuisé</button>
                 <div class="payment-methods payment-methods--compact" aria-label="Moyens de paiement acceptés">
                   <div class="payment-methods-icons">
                     <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
@@ -593,7 +596,7 @@
           </article>
 
           <article
-            class="product-card"
+            class="product-card is-out-of-stock"
             data-category="alimentation"
             data-product-id="gamelle-gateau"
             data-product-name="Gamelles gâteau d'anniversaire / anti-glouton"
@@ -607,7 +610,7 @@
                 loading="lazy"
                 decoding="async"
               >
-              <span class="product-badge new">Nouveau</span>
+              <span class="product-badge sold-out">Épuisé</span>
             </div>
             <div class="product-info">
               <p class="product-category">Alimentation</p>
@@ -628,6 +631,7 @@
                   id="gamelleShippingSelect"
                   data-shipping-select
                   aria-label="Choisir l'adresse de livraison"
+                  disabled
                 >
                   <option value="suisse" selected>Suisse — Gratuit (0.00 CHF)</option>
                   <option value="europe">Europe — 9.90 CHF</option>
@@ -640,9 +644,11 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-order-whatsapp"
+                  class="btn btn-cart product-cart-btn btn-stock-out"
                   data-id="gamelle-gateau"
-                >Commander maintenant</button>
+                  disabled
+                  aria-disabled="true"
+                >Épuisé</button>
                 <div class="payment-methods payment-methods--compact" aria-label="Moyens de paiement acceptés">
                   <div class="payment-methods-icons">
                     <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">

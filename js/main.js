@@ -2,8 +2,11 @@ const STORE_EMAIL = 'Adoarraa@gmail.com';
 const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${STORE_EMAIL}`;
 const CART_STORAGE_KEY = 'animosuisse-cart';
 
-const OUT_OF_STOCK_PRODUCT_IDS = new Set();
-const OUT_OF_STOCK_NAMES = [];
+const OUT_OF_STOCK_PRODUCT_IDS = new Set(['costumes-chiens', 'gamelle-gateau']);
+const OUT_OF_STOCK_NAMES = [
+  'Costumes et tenues amusantes pour chiens',
+  "Gamelles gâteau d'anniversaire / anti-glouton",
+];
 
 function isOutOfStockProduct(productId, productName) {
   if (productId != null && OUT_OF_STOCK_PRODUCT_IDS.has(String(productId))) return true;

@@ -22,7 +22,7 @@ const products = {
   'caisse-transport': { name: 'Caisses de transport sécurisées', price: 49.9 },
   'distributeur-auto': { name: "Distributeur automatique d'eau et nourriture", price: 34.9 },
   'costumes-chiens': { name: 'Costumes et tenues amusantes pour chiens', price: 19.9 },
-  'jouets-interactifs': { name: 'Jouets interactifs et disques de jeu', price: 14.9 },
+  'jouet-chat-interactif': { name: 'Jouet Électrique Interactif Cache-Cache pour Chat', price: 19.9 },
   'gamelle-gateau': { name: "Gamelles gâteau d'anniversaire / anti-glouton", price: 16.9 },
 };
 

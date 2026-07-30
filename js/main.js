@@ -18,10 +18,12 @@ function purgeOutOfStockFromCart() {
 }
 
 const products = {
-  'brosse-vapeur': { name: 'Brosse Vapeur 3-en-1 pour Chats et Chiens', price: 24.9 },
-  'gourde-multifonction': { name: 'Gourde Multifonction 3-en-1 (Eau, Croquettes & Sacs)', price: 19 },
-  'accessoire-chien-1': { name: 'Laisse Mains Libres avec Sac Banane (Poche Téléphone)', price: 29.9 },
-  'accessoire-chien-2': { name: 'Accessoire Chien - Modèle 2', price: 24.9 },
+  'pull-noel-rennes': { name: 'Pull de Noël / Rennes pour chien', price: 24.9 },
+  'caisse-transport': { name: 'Caisses de transport sécurisées', price: 49.9 },
+  'distributeur-auto': { name: "Distributeur automatique d'eau et nourriture", price: 34.9 },
+  'costumes-chiens': { name: 'Costumes et tenues amusantes pour chiens', price: 19.9 },
+  'jouets-interactifs': { name: 'Jouets interactifs et disques de jeu', price: 14.9 },
+  'gamelle-gateau': { name: "Gamelles gâteau d'anniversaire / anti-glouton", price: 16.9 },
 };
 
 const STRIPE_PRODUCTS = {

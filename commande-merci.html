@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merci pour votre commande — AnimoSuisse</title>
+  <meta name="description" content="Votre paiement AnimoSuisse a bien été reçu.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260730-stripe-express">
+</head>
+<body>
+  <main class="container" style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:4rem 1.25rem;">
+    <section style="max-width:560px;text-align:center;">
+      <p class="section-label">Paiement confirmé</p>
+      <h1 class="section-title" style="margin-bottom:1rem;">Merci pour votre commande</h1>
+      <p style="color:var(--color-text-muted);line-height:1.6;margin-bottom:2rem;">
+        Votre règlement Stripe a bien été enregistré. Vous recevrez bientôt un e-mail de confirmation
+        avec le détail de votre commande.
+      </p>
+      <a class="btn btn-cart" href="index.html#articles">Retour à la boutique</a>
+    </section>
+  </main>
+  <script>
+    try {
+      const raw = sessionStorage.getItem('marteder-last-order');
+      if (raw) {
+        const order = JSON.parse(raw);
+        if (order?.supplierSkus) {
+          console.info('SKU fournisseur:', order.supplierSkus);
+        }
+      }
+    } catch (error) {
+      /* ignore */
+    }
+  </script>
+</body>
+</html>

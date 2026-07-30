@@ -17,6 +17,10 @@ const CATALOG = {
     name: 'Mèches X-Pression Ultra Braid',
     unitAmountCents: 500,
   },
+  'brosse-vapeur': {
+    name: 'Brosse Vapeur 3-en-1 pour Chats et Chiens',
+    unitAmountCents: 2490,
+  },
   'jouet-chat-interactif': {
     name: 'Jouet Électrique Interactif Cache-Cache pour Chat',
     unitAmountCents: 1990,
@@ -94,7 +98,7 @@ function resolveOrigin(event, body) {
   const proto = event.headers['x-forwarded-proto'] || 'https';
   const host = event.headers['x-forwarded-host'] || event.headers.host || '';
   if (host) return `${proto}://${host}`.replace(/\/$/, '');
-  return 'https://adoarraa-maker.github.io/marteder-textile';
+  return 'https://adoarraa-maker.github.io/animosuisse';
 }
 
 exports.handler = async (event) => {
@@ -155,13 +159,20 @@ exports.handler = async (event) => {
   params.set('success_url', `${origin}/commande-merci.html?paid=1&session_id={CHECKOUT_SESSION_ID}`);
   params.set('cancel_url', `${origin}/index.html?checkout=cancel`);
   params.set('phone_number_collection[enabled]', 'true');
+  params.set('billing_address_collection', 'auto');
+  if (body.express || body.collectShippingAddress) {
+    ['CH', 'FR', 'DE', 'IT', 'AT', 'BE', 'LU', 'LI'].forEach((country) => {
+      params.append('shipping_address_collection[allowed_countries][]', country);
+    });
+  }
   if (email) params.set('customer_email', email);
-  params.set('metadata[customer_name]', name);
-  params.set('metadata[customer_phone]', phone);
-  params.set('metadata[customer_address]', address);
+  if (name) params.set('metadata[customer_name]', name);
+  if (phone) params.set('metadata[customer_phone]', phone);
+  if (address) params.set('metadata[customer_address]', address);
   params.set('metadata[shipping]', shippingKey);
-  params.set('payment_intent_data[metadata][customer_name]', name);
-  params.set('payment_intent_data[metadata][customer_phone]', phone);
+  params.set('metadata[checkout_mode]', body.express ? 'express' : 'cart');
+  if (name) params.set('payment_intent_data[metadata][customer_name]', name);
+  if (phone) params.set('payment_intent_data[metadata][customer_phone]', phone);
   params.set('payment_intent_data[metadata][shipping]', shippingKey);
 
   let itemCount = 0;

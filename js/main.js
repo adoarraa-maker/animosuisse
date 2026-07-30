@@ -30,7 +30,11 @@ function purgeOutOfStockFromCart() {
 }
 
 const products = {
-  'brosse-vapeur': { name: 'Brosse Vapeur 3-en-1 pour Chats et Chiens', price: 24.9 },
+  'brosse-vapeur': {
+    name: 'Brosse Vapeur 3-en-1 pour Chats et Chiens',
+    price: 24.9,
+    stripeProduct: 'brosse-vapeur',
+  },
   'pull-noel-rennes': { name: 'Pull de Noël / Rennes pour chien', price: 24.9 },
   'caisse-transport': { name: 'Caisses de transport sécurisées', price: 49.9 },
   'distributeur-auto': { name: "Distributeur automatique d'eau et nourriture", price: 34.9 },
@@ -53,6 +57,10 @@ const STRIPE_PRODUCTS = {
   meches: {
     unitPrice: 5,
     label: 'Mèches X-Pression Ultra Braid',
+  },
+  'brosse-vapeur': {
+    unitPrice: 24.9,
+    label: 'Brosse Vapeur 3-en-1 pour Chats et Chiens',
   },
   'jouet-chat-interactif': {
     unitPrice: 19.9,
@@ -170,7 +178,102 @@ function updateProductOrderSummary(card) {
   summary.innerHTML = `Produit ${formatMoneyCHF(price)} + livraison ${formatMoneyCHF(shipping)} = <strong>Total ${formatMoneyCHF(total)}</strong>`;
 }
 
-function initWhatsAppProductOrders() {
+function buildExpressCheckoutPayload(card) {
+  const productId = card.dataset.productId || '';
+  const catalog = products[productId];
+  const stripeKey = catalog?.stripeProduct || productId;
+  if (!STRIPE_PRODUCTS[stripeKey]) {
+    throw new Error('Ce produit n’est pas encore disponible au paiement en ligne.');
+  }
+
+  const name = card.dataset.productName || catalog?.name || 'Article AnimoSuisse';
+  const zoneKey = card.querySelector('[data-shipping-select]')?.value || 'suisse';
+  const { sku, supplier } = getSupplierMeta(productId, card);
+
+  return {
+    items: [
+      {
+        productKey: stripeKey,
+        quantity: 1,
+        variantLabel: '',
+        name,
+        supplierSku: sku,
+        supplier,
+      },
+    ],
+    email: '',
+    name: '',
+    phone: '',
+    address: '',
+    shipping: zoneKey,
+    origin: getSiteOriginPath(),
+    supplierSkus: sku ? `${name} → ${sku} × 1` : '',
+    express: true,
+    collectShippingAddress: true,
+  };
+}
+
+function setCartFromProductCard(card) {
+  const productId = card.dataset.productId || '';
+  const catalog = products[productId];
+  if (!catalog) return;
+  const { sku, supplier } = getSupplierMeta(productId, card);
+  const zoneKey = card.querySelector('[data-shipping-select]')?.value || 'suisse';
+  const checkoutShipping = document.getElementById('checkoutShipping');
+  if (checkoutShipping) checkoutShipping.value = zoneKey;
+
+  cart = [
+    {
+      name: catalog.name,
+      displayName: catalog.name,
+      variantKey: 'default',
+      variantLabel: '',
+      price: catalog.price,
+      quantity: 1,
+      stripeProduct: catalog.stripeProduct || productId,
+      supplierSku: sku,
+      supplier,
+      productId,
+    },
+  ];
+  renderCart();
+  saveCart();
+}
+
+async function startStripeExpressCheckout(card, btn) {
+  const previousLabel = btn.textContent;
+  btn.disabled = true;
+  btn.classList.add('is-loading');
+  btn.textContent = 'Redirection vers Stripe…';
+
+  try {
+    setCartFromProductCard(card);
+    const payload = buildExpressCheckoutPayload(card);
+    const session = await createStripeCheckoutSession(payload);
+    notifyOrderInBackground({
+      _subject: `Commande Stripe AnimoSuisse — ${card.dataset.productName || 'Article'}`,
+      channel: 'Stripe Express Checkout',
+      product_id: card.dataset.productId || '',
+      product_name: card.dataset.productName || '',
+      product_price: card.dataset.productPrice || '',
+      supplier_sku: payload.items[0]?.supplierSku || '',
+      cj_sku: payload.items[0]?.supplierSku || '',
+      supplier: payload.items[0]?.supplier || '',
+      shipping: payload.shipping,
+      stripe_session_id: session.id || '',
+      payment: 'Stripe Checkout Session',
+    });
+    redirectToStripe(session.url);
+  } catch (error) {
+    console.error('express stripe checkout', error);
+    showToast(error.message || 'Paiement Stripe indisponible. Réessayez dans un instant.');
+    btn.disabled = false;
+    btn.classList.remove('is-loading');
+    btn.textContent = previousLabel;
+  }
+}
+
+function initStripeProductOrders() {
   document.querySelectorAll('.product-card[data-product-price]').forEach((card) => {
     updateProductOrderSummary(card);
     const select = card.querySelector('[data-shipping-select]');
@@ -178,8 +281,8 @@ function initWhatsAppProductOrders() {
   });
 
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-order-whatsapp');
-    if (!btn) return;
+    const btn = e.target.closest('.btn-order-stripe');
+    if (!btn || btn.disabled) return;
     e.preventDefault();
     const card = btn.closest('.product-card');
     if (!card) return;
@@ -187,21 +290,7 @@ function initWhatsAppProductOrders() {
       showToast('Ce produit est en rupture de stock.');
       return;
     }
-    const message = buildProductWhatsAppMessage(card);
-    const productId = card.dataset.productId || '';
-    const { sku, supplier } = getSupplierMeta(productId, card);
-    notifyOrderInBackground({
-      _subject: `Commande WhatsApp AnimoSuisse — ${card.dataset.productName || 'Article'}`,
-      channel: 'WhatsApp',
-      product_id: productId,
-      product_name: card.dataset.productName || '',
-      product_price: card.dataset.productPrice || '',
-      supplier_sku: sku,
-      cj_sku: sku,
-      supplier: supplier,
-      order_message: message,
-    });
-    openWhatsAppOrder(message);
+    startStripeExpressCheckout(card, btn);
   });
 }
 
@@ -760,28 +849,39 @@ function getSiteOriginPath() {
   }
 }
 
-async function createStripeCheckoutSession() {
-  const plan = getStripePaymentPlan();
-  if (!plan.canCheckout) {
-    throw new Error(plan.note || 'Paiement Stripe indisponible pour ce panier.');
+async function createStripeCheckoutSession(customPayload = null) {
+  const isExpress = Boolean(customPayload?.express);
+  const plan = isExpress
+    ? {
+        total: (customPayload.items || []).reduce((sum, item) => {
+          const unit = STRIPE_PRODUCTS[item.productKey]?.unitPrice || 0;
+          return sum + unit * (item.quantity || 1);
+        }, 0) + getShippingCostForZone(customPayload.shipping || 'suisse', 1),
+        canCheckout: true,
+      }
+    : getStripePaymentPlan();
+
+  if (!isExpress) {
+    if (!plan.canCheckout) {
+      throw new Error(plan.note || 'Paiement Stripe indisponible pour ce panier.');
+    }
+    const formError = validateCheckoutForm();
+    if (formError) throw new Error(formError);
   }
 
-  const formError = validateCheckoutForm();
-  if (formError) throw new Error(formError);
-
-  const payload = buildCheckoutSessionPayload();
+  const payload = customPayload || buildCheckoutSessionPayload();
   if (!payload.items.length) {
     throw new Error('Aucun article payable en ligne dans le panier.');
   }
 
-  // Garde une copie locale pour la page de confirmation
   try {
     sessionStorage.setItem(
       'marteder-last-order',
       JSON.stringify({
         totalLabel: formatPrice(plan.total),
-        shippingLabel: getShippingLabel(),
+        shippingLabel: getShippingLabel(payload.shipping || getSelectedShippingKey()),
         order: formatCartSummary(),
+        supplierSkus: payload.supplierSkus || getCartSupplierSkuSummary(),
       })
     );
     sessionStorage.removeItem(STRIPE_PENDING_KEY);
@@ -820,7 +920,8 @@ async function createStripeCheckoutSession() {
     }
 
     if (response.status === 404) {
-      lastError = 'API de paiement introuvable sur ce déploiement.';
+      lastError =
+        'API de paiement introuvable sur ce déploiement. Configurez Netlify Functions ou MARTEDER_STRIPE_CHECKOUT_URL.';
       continue;
     }
 
@@ -1077,7 +1178,7 @@ function initCart() {
     if (!btn) return;
 
     e.preventDefault();
-    openWhatsAppOrder(WHATSAPP_ORDER_MESSAGE);
+    showToast('Utilisez « Commander maintenant » pour payer via Stripe.');
   });
 }
 
@@ -1716,7 +1817,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCart();
   initCartPanel();
   initCartCheckout();
-  initWhatsAppProductOrders();
+  initStripeProductOrders();
   initContactForm();
   initFabricVariants();
   initMecheVariant();

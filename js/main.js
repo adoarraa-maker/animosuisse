@@ -1584,6 +1584,29 @@ function initHeroCoverSlideshow() {
   }, 5500);
 }
 
+function initProductThumbs() {
+  document.querySelectorAll('.product-card--thumbs').forEach((card) => {
+    const mainImage = card.querySelector('[data-product-main]');
+    const thumbs = Array.from(card.querySelectorAll('.product-thumb'));
+    if (!mainImage || !thumbs.length) return;
+
+    thumbs.forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        const src = thumb.getAttribute('data-thumb-src');
+        const alt = thumb.getAttribute('data-thumb-alt');
+        if (!src) return;
+        mainImage.src = src;
+        if (alt) mainImage.alt = alt;
+        thumbs.forEach((item) => {
+          const isActive = item === thumb;
+          item.classList.toggle('active', isActive);
+          item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+      });
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   purgeOutOfStockFromCart();
   renderCart();
@@ -1603,6 +1626,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBackToTop();
   initNewsletter();
   initHeroCoverSlideshow();
+  initProductThumbs();
 
   try {
     const params = new URLSearchParams(window.location.search);

@@ -56,6 +56,7 @@ const STRIPE_PRODUCTS = {
     label: 'Brosse Vapeur 3-en-1 pour Chats et Chiens',
     supplierSku: 'ANIMO-BROSSE-VAPEUR-3EN1',
     supplier: 'AnimoSuisse',
+    paymentLink: 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
   },
   'gourde-chien-3en1': {
     unitPrice: 29.9,
@@ -70,6 +71,7 @@ const STRIPE_PRODUCTS = {
     label: 'Jouet Électrique Interactif Cache-Cache pour Chat',
     supplierSku: 'CJJCWMY00152-Dedicated power cord',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
+    paymentLink: 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
   },
 };
 

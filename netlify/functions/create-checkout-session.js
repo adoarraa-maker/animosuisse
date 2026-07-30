@@ -17,6 +17,12 @@ const CATALOG = {
     name: 'Mèches X-Pression Ultra Braid',
     unitAmountCents: 500,
   },
+  'jouet-chat-interactif': {
+    name: 'Jouet Électrique Interactif Cache-Cache pour Chat',
+    unitAmountCents: 1990,
+    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
+  },
 };
 
 const SHIPPING = {
@@ -160,6 +166,7 @@ exports.handler = async (event) => {
 
   let itemCount = 0;
   let lineIndex = 0;
+  const supplierSkuLines = [];
 
   for (const raw of items) {
     const productKey = sanitizeText(raw.productKey, 40);
@@ -178,6 +185,11 @@ exports.handler = async (event) => {
     const productName = variantLabel
       ? `${catalogItem.name} — ${variantLabel}`
       : catalogItem.name;
+    const supplierSku = sanitizeText(catalogItem.supplierSku || raw.supplierSku, 120);
+    const supplier = sanitizeText(catalogItem.supplier || raw.supplier, 160);
+    if (supplierSku) {
+      supplierSkuLines.push(`${productName} → ${supplierSku} × ${quantity}`);
+    }
 
     params.set(`line_items[${lineIndex}][quantity]`, String(quantity));
     params.set(`line_items[${lineIndex}][price_data][currency]`, 'chf');
@@ -190,6 +202,22 @@ exports.handler = async (event) => {
       `line_items[${lineIndex}][price_data][product_data][metadata][product_key]`,
       productKey
     );
+    if (supplierSku) {
+      params.set(
+        `line_items[${lineIndex}][price_data][product_data][metadata][supplier_sku]`,
+        supplierSku
+      );
+      params.set(
+        `line_items[${lineIndex}][price_data][product_data][metadata][cj_sku]`,
+        supplierSku
+      );
+    }
+    if (supplier) {
+      params.set(
+        `line_items[${lineIndex}][price_data][product_data][metadata][supplier]`,
+        supplier
+      );
+    }
     if (variantLabel) {
       params.set(
         `line_items[${lineIndex}][price_data][product_data][metadata][variant]`,
@@ -219,6 +247,13 @@ exports.handler = async (event) => {
   }
 
   params.set('metadata[item_count]', String(itemCount));
+  if (supplierSkuLines.length) {
+    const skuSummary = sanitizeText(supplierSkuLines.join(' | '), 480);
+    params.set('metadata[supplier_skus]', skuSummary);
+    params.set('metadata[cj_skus]', skuSummary);
+    params.set('payment_intent_data[metadata][supplier_skus]', skuSummary);
+    params.set('payment_intent_data[metadata][cj_skus]', skuSummary);
+  }
 
   try {
     const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {

@@ -34,7 +34,13 @@ const products = {
   'caisse-transport': { name: 'Caisses de transport sécurisées', price: 49.9 },
   'distributeur-auto': { name: "Distributeur automatique d'eau et nourriture", price: 34.9 },
   'costumes-chiens': { name: 'Costumes et tenues amusantes pour chiens', price: 19.9 },
-  'jouet-chat-interactif': { name: 'Jouet Électrique Interactif Cache-Cache pour Chat', price: 19.9 },
+  'jouet-chat-interactif': {
+    name: 'Jouet Électrique Interactif Cache-Cache pour Chat',
+    price: 19.9,
+    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
+    stripeProduct: 'jouet-chat-interactif',
+  },
   'gamelle-gateau': { name: "Gamelles gâteau d'anniversaire / anti-glouton", price: 16.9 },
 };
 
@@ -46,6 +52,12 @@ const STRIPE_PRODUCTS = {
   meches: {
     unitPrice: 5,
     label: 'Mèches X-Pression Ultra Braid',
+  },
+  'jouet-chat-interactif': {
+    unitPrice: 19.9,
+    label: 'Jouet Électrique Interactif Cache-Cache pour Chat',
+    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
   },
 };
 
@@ -105,7 +117,23 @@ function getShippingCostForZone(zoneKey, itemCount = 1) {
   return option.baseCost;
 }
 
+function getSupplierMeta(productId, card) {
+  const fromCatalog = productId && products[productId] ? products[productId] : null;
+  const sku =
+    card?.dataset?.supplierSku ||
+    fromCatalog?.supplierSku ||
+    (productId && STRIPE_PRODUCTS[productId]?.supplierSku) ||
+    '';
+  const supplier =
+    card?.dataset?.supplierName ||
+    fromCatalog?.supplier ||
+    (productId && STRIPE_PRODUCTS[productId]?.supplier) ||
+    '';
+  return { sku, supplier };
+}
+
 function buildProductWhatsAppMessage(card) {
+  const productId = card.dataset.productId || '';
   const name = card.dataset.productName || card.querySelector('.product-name')?.textContent?.trim() || 'Article AnimoSuisse';
   const price = parseFloat(card.dataset.productPrice || '0') || 0;
   const select = card.querySelector('[data-shipping-select]');
@@ -114,14 +142,20 @@ function buildProductWhatsAppMessage(card) {
   const shipping = getShippingCostForZone(zoneKey, 1);
   const total = price + shipping;
   const shippingText = shipping === 0 ? 'Gratuite (0.00 CHF)' : formatMoneyCHF(shipping);
+  const { sku, supplier } = getSupplierMeta(productId, card);
 
-  return [
+  const lines = [
     'Bonjour, je souhaite commander sur AnimoSuisse :',
     '',
     `Article : ${name} — ${formatMoneyCHF(price)}`,
+  ];
+  if (sku) lines.push(`SKU fournisseur : ${sku}`);
+  if (supplier) lines.push(`Fournisseur : ${supplier}`);
+  lines.push(
     `Livraison : ${zone.shortLabel || zone.label} — ${shippingText}`,
     `Total : ${formatMoneyCHF(total)}`,
-  ].join('\n');
+  );
+  return lines.join('\n');
 }
 
 function updateProductOrderSummary(card) {
@@ -148,7 +182,25 @@ function initWhatsAppProductOrders() {
     e.preventDefault();
     const card = btn.closest('.product-card');
     if (!card) return;
-    openWhatsAppOrder(buildProductWhatsAppMessage(card));
+    if (isOutOfStockProduct(card.dataset.productId, card.dataset.productName)) {
+      showToast('Ce produit est en rupture de stock.');
+      return;
+    }
+    const message = buildProductWhatsAppMessage(card);
+    const productId = card.dataset.productId || '';
+    const { sku, supplier } = getSupplierMeta(productId, card);
+    notifyOrderInBackground({
+      _subject: `Commande WhatsApp AnimoSuisse — ${card.dataset.productName || 'Article'}`,
+      channel: 'WhatsApp',
+      product_id: productId,
+      product_name: card.dataset.productName || '',
+      product_price: card.dataset.productPrice || '',
+      supplier_sku: sku,
+      cj_sku: sku,
+      supplier: supplier,
+      order_message: message,
+    });
+    openWhatsAppOrder(message);
   });
 }
 
@@ -436,8 +488,24 @@ function saveCart() {
 function formatCartSummary() {
   return cart.map((item) => {
     const variant = item.variantLabel ? ` (${item.variantLabel})` : '';
-    return `- ${item.displayName || item.name}${variant} × ${item.quantity} — ${formatPrice(item.price * item.quantity)}`;
+    const sku = item.supplierSku ? ` | SKU: ${item.supplierSku}` : '';
+    return `- ${item.displayName || item.name}${variant}${sku} × ${item.quantity} — ${formatPrice(item.price * item.quantity)}`;
   }).join('\n');
+}
+
+function getCartSupplierSkuSummary() {
+  return cart
+    .map((item) => {
+      const normalized = normalizeCartItem(item);
+      const sku =
+        normalized.supplierSku ||
+        STRIPE_PRODUCTS[normalized.stripeProduct]?.supplierSku ||
+        '';
+      if (!sku) return '';
+      return `${normalized.displayName || normalized.name} → ${sku} × ${normalized.quantity}`;
+    })
+    .filter(Boolean)
+    .join('\n');
 }
 
 function formatPrice(price) {
@@ -515,12 +583,29 @@ function updateShippingSelectLabels() {
 }
 
 function normalizeCartItem(item) {
-  if (item.stripeProduct) return item;
+  if (item.stripeProduct) {
+    const catalog = STRIPE_PRODUCTS[item.stripeProduct];
+    return {
+      ...item,
+      supplierSku: item.supplierSku || catalog?.supplierSku || '',
+      supplier: item.supplier || catalog?.supplier || '',
+    };
+  }
   if (item.stripeEligible && item.price === 80) {
     return { ...item, stripeProduct: 'getzner' };
   }
   if (item.name === mecheProductName || item.price === 5) {
     return { ...item, stripeProduct: 'meches' };
+  }
+  const byName = Object.entries(products).find(([, product]) => product.name === item.name);
+  if (byName?.[1]?.stripeProduct) {
+    const product = byName[1];
+    return {
+      ...item,
+      stripeProduct: product.stripeProduct,
+      supplierSku: item.supplierSku || product.supplierSku || '',
+      supplier: item.supplier || product.supplier || '',
+    };
   }
   return { ...item, stripeProduct: null };
 }
@@ -637,11 +722,14 @@ function buildCheckoutSessionPayload() {
   const items = cart
     .map((rawItem) => {
       const item = normalizeCartItem(rawItem);
+      const catalog = item.stripeProduct ? STRIPE_PRODUCTS[item.stripeProduct] : null;
       return {
         productKey: item.stripeProduct,
         quantity: item.quantity,
         variantLabel: item.variantLabel || '',
         name: item.displayName || item.name,
+        supplierSku: item.supplierSku || catalog?.supplierSku || '',
+        supplier: item.supplier || catalog?.supplier || '',
       };
     })
     .filter((item) => item.productKey && STRIPE_PRODUCTS[item.productKey]);
@@ -654,6 +742,7 @@ function buildCheckoutSessionPayload() {
     address: customer.address,
     shipping: customer.shipping,
     origin: getSiteOriginPath(),
+    supplierSkus: getCartSupplierSkuSummary(),
   };
 }
 
@@ -1282,13 +1371,14 @@ function initCartCheckout() {
 
       // Notification boutique seulement après création réussie de la session
       notifyOrderInBackground({
-        _subject: `Commande Marteder — ${formatPrice(plan.total)}`,
+        _subject: `Commande AnimoSuisse — ${formatPrice(plan.total)}`,
         name: customer.name,
         email: customer.email,
         phone: customer.phone,
         address: customer.address,
         shipping: getShippingLabel(),
         order: formatCartSummary(),
+        supplier_skus: getCartSupplierSkuSummary(),
         total: formatPrice(plan.total),
         payment: 'Stripe Checkout Session',
         stripe_session_id: session.id || '',

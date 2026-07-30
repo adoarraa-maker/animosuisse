@@ -2,8 +2,17 @@ const STORE_EMAIL = 'Adoarraa@gmail.com';
 const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${STORE_EMAIL}`;
 const CART_STORAGE_KEY = 'animosuisse-cart';
 
-const OUT_OF_STOCK_PRODUCT_IDS = new Set(['costumes-chiens', 'gamelle-gateau']);
+const OUT_OF_STOCK_PRODUCT_IDS = new Set([
+  'pull-noel-rennes',
+  'caisse-transport',
+  'distributeur-auto',
+  'costumes-chiens',
+  'gamelle-gateau',
+]);
 const OUT_OF_STOCK_NAMES = [
+  'Pull de Noël / Rennes pour chien',
+  'Caisses de transport sécurisées',
+  "Distributeur automatique d'eau et nourriture",
   'Costumes et tenues amusantes pour chiens',
   "Gamelles gâteau d'anniversaire / anti-glouton",
 ];

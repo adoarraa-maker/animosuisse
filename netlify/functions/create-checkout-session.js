@@ -21,6 +21,13 @@ const CATALOG = {
     name: 'Brosse Vapeur 3-en-1 pour Chats et Chiens',
     unitAmountCents: 2490,
   },
+  'gourde-chien-3en1': {
+    name: 'Gourde Multifonction 3-en-1 pour Chien (Eau, Croquettes & Sacs)',
+    unitAmountCents: 2990,
+    supplierSku: 'CJMY179795809IR',
+    supplier: 'CJ Dropshipping',
+    supplierVariant: '300ml Garbage Bag / Cherry Blossom Pink',
+  },
   'jouet-chat-interactif': {
     name: 'Jouet Électrique Interactif Cache-Cache pour Chat',
     unitAmountCents: 1990,
@@ -192,14 +199,19 @@ exports.handler = async (event) => {
     }
 
     itemCount += quantity;
-    const variantLabel = sanitizeText(raw.variantLabel, 120);
+    const variantLabel = sanitizeText(
+      raw.variantLabel || catalogItem.supplierVariant,
+      120
+    );
     const productName = variantLabel
       ? `${catalogItem.name} — ${variantLabel}`
       : catalogItem.name;
     const supplierSku = sanitizeText(catalogItem.supplierSku || raw.supplierSku, 120);
     const supplier = sanitizeText(catalogItem.supplier || raw.supplier, 160);
     if (supplierSku) {
-      supplierSkuLines.push(`${productName} → ${supplierSku} × ${quantity}`);
+      supplierSkuLines.push(
+        `${productName} → ${supplierSku}${variantLabel ? ` [${variantLabel}]` : ''} × ${quantity}`
+      );
     }
 
     params.set(`line_items[${lineIndex}][quantity]`, String(quantity));

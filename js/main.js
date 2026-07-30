@@ -2,20 +2,8 @@ const STORE_EMAIL = 'Adoarraa@gmail.com';
 const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${STORE_EMAIL}`;
 const CART_STORAGE_KEY = 'animosuisse-cart';
 
-const OUT_OF_STOCK_PRODUCT_IDS = new Set([
-  'pull-noel-rennes',
-  'caisse-transport',
-  'distributeur-auto',
-  'costumes-chiens',
-  'gamelle-gateau',
-]);
-const OUT_OF_STOCK_NAMES = [
-  'Pull de Noël / Rennes pour chien',
-  'Caisses de transport sécurisées',
-  "Distributeur automatique d'eau et nourriture",
-  'Costumes et tenues amusantes pour chiens',
-  "Gamelles gâteau d'anniversaire / anti-glouton",
-];
+const OUT_OF_STOCK_PRODUCT_IDS = new Set([]);
+const OUT_OF_STOCK_NAMES = [];
 
 function isOutOfStockProduct(productId, productName) {
   if (productId != null && OUT_OF_STOCK_PRODUCT_IDS.has(String(productId))) return true;
@@ -35,10 +23,14 @@ const products = {
     price: 24.9,
     stripeProduct: 'brosse-vapeur',
   },
-  'pull-noel-rennes': { name: 'Pull de Noël / Rennes pour chien', price: 24.9 },
-  'caisse-transport': { name: 'Caisses de transport sécurisées', price: 49.9 },
-  'distributeur-auto': { name: "Distributeur automatique d'eau et nourriture", price: 34.9 },
-  'costumes-chiens': { name: 'Costumes et tenues amusantes pour chiens', price: 19.9 },
+  'gourde-chien-3en1': {
+    name: 'Gourde Multifonction 3-en-1 pour Chien (Eau, Croquettes & Sacs)',
+    price: 29.9,
+    supplierSku: 'CJMY179795809IR',
+    supplierVariant: '300ml Garbage Bag / Cherry Blossom Pink',
+    supplier: 'CJ Dropshipping',
+    stripeProduct: 'gourde-chien-3en1',
+  },
   'jouet-chat-interactif': {
     name: 'Jouet Électrique Interactif Cache-Cache pour Chat',
     price: 19.9,
@@ -46,7 +38,6 @@ const products = {
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
     stripeProduct: 'jouet-chat-interactif',
   },
-  'gamelle-gateau': { name: "Gamelles gâteau d'anniversaire / anti-glouton", price: 16.9 },
 };
 
 const STRIPE_PRODUCTS = {
@@ -61,6 +52,13 @@ const STRIPE_PRODUCTS = {
   'brosse-vapeur': {
     unitPrice: 24.9,
     label: 'Brosse Vapeur 3-en-1 pour Chats et Chiens',
+  },
+  'gourde-chien-3en1': {
+    unitPrice: 29.9,
+    label: 'Gourde Multifonction 3-en-1 pour Chien (Eau, Croquettes & Sacs)',
+    supplierSku: 'CJMY179795809IR',
+    supplierVariant: '300ml Garbage Bag / Cherry Blossom Pink',
+    supplier: 'CJ Dropshipping',
   },
   'jouet-chat-interactif': {
     unitPrice: 19.9,
@@ -138,7 +136,12 @@ function getSupplierMeta(productId, card) {
     fromCatalog?.supplier ||
     (productId && STRIPE_PRODUCTS[productId]?.supplier) ||
     '';
-  return { sku, supplier };
+  const variant =
+    card?.dataset?.supplierVariant ||
+    fromCatalog?.supplierVariant ||
+    (productId && STRIPE_PRODUCTS[productId]?.supplierVariant) ||
+    '';
+  return { sku, supplier, variant };
 }
 
 function buildProductWhatsAppMessage(card) {
@@ -188,14 +191,14 @@ function buildExpressCheckoutPayload(card) {
 
   const name = card.dataset.productName || catalog?.name || 'Article AnimoSuisse';
   const zoneKey = card.querySelector('[data-shipping-select]')?.value || 'suisse';
-  const { sku, supplier } = getSupplierMeta(productId, card);
+  const { sku, supplier, variant } = getSupplierMeta(productId, card);
 
   return {
     items: [
       {
         productKey: stripeKey,
         quantity: 1,
-        variantLabel: '',
+        variantLabel: variant,
         name,
         supplierSku: sku,
         supplier,
@@ -207,7 +210,9 @@ function buildExpressCheckoutPayload(card) {
     address: '',
     shipping: zoneKey,
     origin: getSiteOriginPath(),
-    supplierSkus: sku ? `${name} → ${sku} × 1` : '',
+    supplierSkus: sku
+      ? `${name}${variant ? ` (${variant})` : ''} → ${sku} × 1`
+      : '',
     express: true,
     collectShippingAddress: true,
   };
@@ -227,7 +232,7 @@ function setCartFromProductCard(card) {
       name: catalog.name,
       displayName: catalog.name,
       variantKey: 'default',
-      variantLabel: '',
+      variantLabel: getSupplierMeta(productId, card).variant || '',
       price: catalog.price,
       quantity: 1,
       stripeProduct: catalog.stripeProduct || productId,

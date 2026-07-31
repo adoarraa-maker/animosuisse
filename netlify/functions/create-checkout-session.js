@@ -33,6 +33,12 @@ const CATALOG = {
   'jouet-chat-interactif': {
     name: 'Jouet Électrique Interactif Cache-Cache pour Chat',
     unitAmountCents: 1990,
+    supplierSku: 'CJJCWMY00152',
+    supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
+  },
+  'jouet-chat-cable': {
+    name: "Câble d'alimentation dédié (Jouet Chat)",
+    unitAmountCents: 990,
     supplierSku: 'CJJCWMY00152-Dedicated power cord',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
   },

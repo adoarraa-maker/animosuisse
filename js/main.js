@@ -36,9 +36,16 @@ const products = {
   'jouet-chat-interactif': {
     name: 'Jouet Électrique Interactif Cache-Cache pour Chat',
     price: 19.9,
-    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplierSku: 'CJJCWMY00152',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
     stripeProduct: 'jouet-chat-interactif',
+  },
+  'jouet-chat-cable': {
+    name: "Câble d'alimentation dédié (Jouet Chat)",
+    price: 9.9,
+    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
+    stripeProduct: 'jouet-chat-cable',
   },
 };
 
@@ -69,9 +76,16 @@ const STRIPE_PRODUCTS = {
   'jouet-chat-interactif': {
     unitPrice: 19.9,
     label: 'Jouet Électrique Interactif Cache-Cache pour Chat',
-    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplierSku: 'CJJCWMY00152',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
     paymentLink: 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
+  },
+  'jouet-chat-cable': {
+    unitPrice: 9.9,
+    label: "Câble d'alimentation dédié (Jouet Chat)",
+    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
+    paymentLink: 'https://buy.stripe.com/bJe14o1ot4R20FN7QDcAo08',
   },
 };
 
@@ -159,7 +173,9 @@ function getShippingCostForZone(zoneKey, itemCount = 1) {
 function getSupplierMeta(productId, card) {
   const fromCatalog = productId && products[productId] ? products[productId] : null;
   const activeColor = card?.querySelector?.('.color-swatch.active');
+  const activeOption = card?.querySelector?.('.product-option-btn.active');
   const sku =
+    activeOption?.dataset?.optionSku ||
     card?.dataset?.supplierSku ||
     fromCatalog?.supplierSku ||
     (productId && STRIPE_PRODUCTS[productId]?.supplierSku) ||
@@ -170,6 +186,7 @@ function getSupplierMeta(productId, card) {
     (productId && STRIPE_PRODUCTS[productId]?.supplier) ||
     '';
   const variant =
+    activeOption?.dataset?.optionLabel ||
     activeColor?.dataset?.supplierVariant ||
     activeColor?.dataset?.colorLabel ||
     card?.dataset?.supplierVariant ||
@@ -178,7 +195,34 @@ function getSupplierMeta(productId, card) {
     '';
   const colorKey = activeColor?.dataset?.colorKey || '';
   const colorLabel = activeColor?.dataset?.colorLabel || '';
-  return { sku, supplier, variant, colorKey, colorLabel };
+  const optionKey = activeOption?.dataset?.optionKey || '';
+  const optionLabel = activeOption?.dataset?.optionLabel || '';
+  const stripeProduct =
+    activeOption?.dataset?.optionStripeProduct ||
+    card?.dataset?.stripeProduct ||
+    fromCatalog?.stripeProduct ||
+    productId ||
+    '';
+  const price = activeOption?.dataset?.optionPrice
+    ? parseFloat(activeOption.dataset.optionPrice)
+    : parseFloat(card?.dataset?.productPrice || fromCatalog?.price || '0') || 0;
+  const paymentLink =
+    activeOption?.dataset?.optionPaymentLink ||
+    card?.dataset?.stripePaymentLink ||
+    STRIPE_PRODUCTS[stripeProduct]?.paymentLink ||
+    '';
+  return {
+    sku,
+    supplier,
+    variant,
+    colorKey,
+    colorLabel,
+    optionKey,
+    optionLabel,
+    stripeProduct,
+    price,
+    paymentLink,
+  };
 }
 
 function buildProductWhatsAppMessage(card) {
@@ -285,37 +329,66 @@ function setCartFromProductCard(card) {
 function addProductCardToCart(card) {
   const productId = card.dataset.productId || '';
   const catalog = products[productId];
-  if (!catalog) {
+  if (!catalog && !card.querySelector('.product-option-btn.active')) {
     throw new Error('Produit introuvable.');
   }
-  if (isOutOfStockProduct(productId, catalog.name)) {
+  if (isOutOfStockProduct(productId, catalog?.name || card.dataset.productName)) {
     throw new Error('Ce produit est en rupture de stock.');
   }
 
-  const { sku, supplier, variant, colorKey, colorLabel } = getSupplierMeta(productId, card);
+  const {
+    sku,
+    supplier,
+    variant,
+    colorKey,
+    colorLabel,
+    optionKey,
+    optionLabel,
+    stripeProduct,
+    price,
+  } = getSupplierMeta(productId, card);
+
+  const stripeKey = stripeProduct || catalog?.stripeProduct || productId;
+  const stripeCatalog = STRIPE_PRODUCTS[stripeKey];
+  if (!stripeCatalog) {
+    throw new Error('Cette variante n’est pas encore disponible au paiement.');
+  }
+
   const zoneKey = card.querySelector('[data-shipping-select]')?.value || 'suisse';
   const checkoutShipping = document.getElementById('checkoutShipping');
   if (checkoutShipping && cart.length === 0) {
     checkoutShipping.value = zoneKey;
   }
 
+  const baseName =
+    stripeCatalog.label ||
+    catalog?.name ||
+    card.dataset.productName ||
+    'Article AnimoSuisse';
   const displayName = colorLabel
-    ? `${catalog.name} — ${colorLabel}`
-    : catalog.name;
+    ? `${baseName} — ${colorLabel}`
+    : optionLabel && optionKey && optionKey !== 'jouet'
+      ? baseName
+      : baseName;
 
   addToCart({
-    name: catalog.name,
+    name: baseName,
     displayName,
-    variantKey: colorKey ? `${productId}:${colorKey}` : productId,
-    variantLabel: variant || colorLabel || '',
-    variantType: colorLabel ? 'Couleur' : '',
-    price: catalog.price,
-    stripeProduct: catalog.stripeProduct || productId,
+    variantKey: optionKey
+      ? `${productId}:${optionKey}${colorKey ? `:${colorKey}` : ''}`
+      : colorKey
+        ? `${productId}:${colorKey}`
+        : productId,
+    variantLabel: variant || colorLabel || optionLabel || '',
+    variantType: colorLabel ? 'Couleur' : optionLabel ? 'Option' : '',
+    price: price || catalog?.price || stripeCatalog.unitPrice,
+    stripeProduct: stripeKey,
     supplierSku: sku,
     supplier,
-    productId,
+    productId: stripeKey,
     colorKey: colorKey || '',
     colorLabel: colorLabel || '',
+    optionKey: optionKey || '',
   });
 }
 
@@ -2037,6 +2110,64 @@ function initGourdeColorVariants() {
   });
 }
 
+function initJouetChatOptions() {
+  document.querySelectorAll('[data-jouet-options]').forEach((box) => {
+    const card = box.closest('.product-card');
+    if (!card) return;
+    const mainImage = card.querySelector('[data-product-main]');
+    const priceDisplay = card.querySelector('[data-product-price-display]');
+    const preview = box.querySelector('[data-jouet-option-preview]');
+    const options = Array.from(box.querySelectorAll('.product-option-btn'));
+
+    const applyOption = (btn) => {
+      if (!btn) return;
+      const label = btn.dataset.optionLabel || 'Option';
+      const price = parseFloat(btn.dataset.optionPrice || '0') || 0;
+      const imageSrc = btn.dataset.optionImage || '';
+      const sku = btn.dataset.optionSku || '';
+      const stripeProduct = btn.dataset.optionStripeProduct || '';
+      const paymentLink = btn.dataset.optionPaymentLink || '';
+
+      options.forEach((item) => {
+        const isActive = item === btn;
+        item.classList.toggle('active', isActive);
+        item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      card.dataset.productPrice = price.toFixed(2);
+      card.dataset.supplierSku = sku;
+      card.dataset.stripeProduct = stripeProduct;
+      card.dataset.stripePaymentLink = paymentLink;
+      card.dataset.supplierVariant = label;
+
+      if (priceDisplay) priceDisplay.textContent = `${price.toFixed(2)} CHF`;
+      if (mainImage && imageSrc) {
+        mainImage.src = imageSrc;
+        mainImage.alt = `${label} — AnimoSuisse`;
+      }
+      if (preview) {
+        preview.innerHTML = `Option : <strong>${label}</strong>${
+          sku ? ` — SKU <strong>${sku}</strong>` : ''
+        }`;
+      }
+
+      card.querySelectorAll('.product-thumb').forEach((thumb) => {
+        const match = thumb.getAttribute('data-thumb-src') === imageSrc;
+        thumb.classList.toggle('active', match);
+        thumb.setAttribute('aria-selected', match ? 'true' : 'false');
+      });
+
+      updateProductOrderSummary(card);
+    };
+
+    options.forEach((btn) => {
+      btn.addEventListener('click', () => applyOption(btn));
+    });
+
+    applyOption(box.querySelector('.product-option-btn.active') || options[0]);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   purgeOutOfStockFromCart();
   renderCart();
@@ -2058,6 +2189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initHeroCoverSlideshow();
   initProductThumbs();
   initGourdeColorVariants();
+  initJouetChatOptions();
 
   try {
     const params = new URLSearchParams(window.location.search);

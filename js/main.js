@@ -433,6 +433,46 @@ function addProductCardToCart(card) {
   });
 }
 
+/** Achat direct : redirige vers le Payment Link Stripe du produit (sans panier multi / Netlify). */
+function resolveProductPaymentUrl(card) {
+  const productId = card.dataset.productId || '';
+  const meta = getSupplierMeta(productId, card);
+  const stripeKey = meta.stripeProduct || products[productId]?.stripeProduct || productId;
+  if (!STRIPE_PRODUCTS[stripeKey]) {
+    throw new Error('Cette variante n’est pas encore disponible au paiement.');
+  }
+
+  const url = getPaymentLinkForPayload({
+    items: [
+      {
+        productKey: stripeKey,
+        quantity: 1,
+        supplierSku: meta.sku,
+        variantLabel: meta.variant || meta.sizeLabel || meta.colorLabel || '',
+      },
+    ],
+  });
+  if (!url) {
+    throw new Error('Lien de paiement Stripe indisponible pour ce produit.');
+  }
+  return url;
+}
+
+function buyProductCardDirect(card) {
+  const productId = card.dataset.productId || '';
+  const catalog = products[productId];
+  if (!catalog && !card.querySelector('.product-option-btn.active')) {
+    throw new Error('Produit introuvable.');
+  }
+  if (isOutOfStockProduct(productId, catalog?.name || card.dataset.productName)) {
+    throw new Error('Ce produit est en rupture de stock.');
+  }
+
+  const url = resolveProductPaymentUrl(card);
+  showToast('Redirection vers le paiement Stripe…');
+  window.location.assign(url);
+}
+
 function initProductAddToCart() {
   document.querySelectorAll('.product-card[data-product-price]').forEach((card) => {
     updateProductOrderSummary(card);
@@ -455,9 +495,9 @@ function initProductAddToCart() {
     const card = btn.closest('.product-card');
     if (!card) return;
     try {
-      addProductCardToCart(card);
+      buyProductCardDirect(card);
     } catch (error) {
-      showToast(error.message || 'Impossible d’ajouter au panier.');
+      showToast(error.message || 'Impossible d’ouvrir le paiement Stripe.');
     }
   });
 }
@@ -1130,12 +1170,8 @@ async function createStripeCheckoutSession(customPayload = null) {
       }
     : getStripePaymentPlan();
 
-  if (!isExpress) {
-    if (!plan.canCheckout) {
-      throw new Error(plan.note || 'Paiement Stripe indisponible pour ce panier.');
-    }
-    const formError = validateCheckoutForm();
-    if (formError) throw new Error(formError);
+  if (!isExpress && !plan.canCheckout) {
+    throw new Error(plan.note || 'Paiement Stripe indisponible pour ce panier.');
   }
 
   const payload = customPayload || buildCheckoutSessionPayload();
@@ -1158,92 +1194,24 @@ async function createStripeCheckoutSession(customPayload = null) {
     console.error('sessionStorage order', error);
   }
 
-  // Sur GitHub Pages / sans API : Payment Link si le panier = 1 seul type d’article
+  // Achat via Payment Link (Stripe collecte les infos — pas de Netlify)
   {
     const linkSession = buildPaymentLinkSession(payload);
     if (linkSession) return linkSession;
   }
-
-  let lastError = 'Impossible de créer le paiement Stripe.';
-  const endpoints = getStripeCheckoutApiFallbacks();
-
-  for (const endpoint of endpoints) {
-    let response;
-    try {
-      response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    } catch (error) {
-      lastError = 'Réseau indisponible. Vérifiez votre connexion puis réessayez.';
-      console.error('checkout fetch', endpoint, error);
-      continue;
-    }
-
-    const contentType = response.headers.get('content-type') || '';
-    let data = {};
-    if (contentType.includes('application/json')) {
-      try {
-        data = await response.json();
-      } catch {
-        data = {};
-      }
-    } else {
-      try {
-        await response.text();
-      } catch {
-        /* ignore */
-      }
-      lastError =
-        'API Stripe indisponible sur GitHub Pages. Pour un panier multi-produits, configurez Netlify (ANIMO_STRIPE_CHECKOUT_URL).';
-      continue;
-    }
-
-    if (response.ok && data.url) {
-      return data;
-    }
-
-    if (response.status === 404 || response.status === 405) {
-      lastError =
-        'API de paiement introuvable. Configurez Netlify Functions ou ANIMO_STRIPE_CHECKOUT_URL pour les paniers multi-produits.';
-      continue;
-    }
-
-    if (data.error) {
-      lastError = data.error;
-      break;
-    }
-
-    lastError =
-      response.status === 500
-        ? 'Erreur serveur Stripe. Vérifiez STRIPE_SECRET_KEY (sk_live_…) sur Netlify.'
-        : 'Impossible de créer le paiement Stripe.';
-  }
-
-  // Ne jamais payer seulement le 1er article d’un panier mixte
-  const linkFallback = buildPaymentLinkSession(payload);
-  if (linkFallback) return linkFallback;
 
   const distinctProducts = [
     ...new Set((payload.items || []).map((item) => item.productKey).filter(Boolean)),
   ];
   if (distinctProducts.length > 1) {
     throw new Error(
-      'Panier multi-produits : déployez Netlify avec STRIPE_SECRET_KEY, ou payez un type d’article à la fois.'
+      'Paiement multi-produits indisponible. Achetez chaque article séparément via « Acheter maintenant ».',
     );
   }
 
-  if (isGitHubPagesHost() && !getConfiguredCheckoutApiUrl()) {
-    throw new Error(
-      'Paiement Stripe : ajoutez un Payment Link dans js/stripe-config.js, ou déployez Netlify avec STRIPE_SECRET_KEY.'
-    );
-  }
-
-  throw new Error(lastError);
+  throw new Error(
+    'Lien Stripe manquant pour cet article. Utilisez « Acheter maintenant » sur la fiche produit.',
+  );
 }
 
 function notifyOrderInBackground(payload) {

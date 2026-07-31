@@ -44,13 +44,13 @@ const CATALOG = {
   },
   'laisse-retractable-led': {
     name: 'Laisse de promenade automatique rétractable 3-en-1 (avec Lampe LED)',
-    unitAmountCents: 2490,
+    unitAmountCents: 2990,
     supplierSku: 'ANIMO-LAISSE-RETRACTABLE-LED',
     supplier: 'AnimoSuisse',
   },
   'laisse-course-mains-libres': {
     name: 'Laisse de course mains libres avec sac banane',
-    unitAmountCents: 2490,
+    unitAmountCents: 2990,
     supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
     supplier: 'AnimoSuisse',
   },

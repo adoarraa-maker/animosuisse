@@ -49,14 +49,14 @@ const products = {
   },
   'laisse-retractable-led': {
     name: 'Laisse de promenade automatique rétractable 3-en-1 (avec Lampe LED)',
-    price: 24.9,
+    price: 29.9,
     supplierSku: 'ANIMO-LAISSE-RETRACTABLE-LED',
     supplier: 'AnimoSuisse',
     stripeProduct: 'laisse-retractable-led',
   },
   'laisse-course-mains-libres': {
     name: 'Laisse de course mains libres avec sac banane',
-    price: 24.9,
+    price: 29.9,
     supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
     supplier: 'AnimoSuisse',
     stripeProduct: 'laisse-course-mains-libres',
@@ -102,18 +102,18 @@ const STRIPE_PRODUCTS = {
     paymentLink: 'https://buy.stripe.com/bJe14o1ot4R20FN7QDcAo08',
   },
   'laisse-retractable-led': {
-    unitPrice: 24.9,
+    unitPrice: 29.9,
     label: 'Laisse de promenade automatique rétractable 3-en-1 (avec Lampe LED)',
     supplierSku: 'ANIMO-LAISSE-RETRACTABLE-LED',
     supplier: 'AnimoSuisse',
-    paymentLink: 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
+    paymentLink: 'https://buy.stripe.com/bJe4gA4AFcjugELef1cAo09',
   },
   'laisse-course-mains-libres': {
-    unitPrice: 24.9,
+    unitPrice: 29.9,
     label: 'Laisse de course mains libres avec sac banane',
     supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
     supplier: 'AnimoSuisse',
-    paymentLink: 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
+    paymentLink: 'https://buy.stripe.com/4gM5kE4AFabmagn6MzcAo0a',
   },
 };
 

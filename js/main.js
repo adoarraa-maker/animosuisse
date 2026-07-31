@@ -47,6 +47,13 @@ const products = {
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
     stripeProduct: 'jouet-chat-cable',
   },
+  'laisse-retractable-led': {
+    name: 'Laisse de promenade automatique rétractable 3-en-1 (avec Lampe LED)',
+    price: 24.9,
+    supplierSku: 'ANIMO-LAISSE-RETRACTABLE-LED',
+    supplier: 'AnimoSuisse',
+    stripeProduct: 'laisse-retractable-led',
+  },
 };
 
 const STRIPE_PRODUCTS = {
@@ -86,6 +93,13 @@ const STRIPE_PRODUCTS = {
     supplierSku: 'CJJJCWMY00152-Dedicated power cord',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
     paymentLink: 'https://buy.stripe.com/bJe14o1ot4R20FN7QDcAo08',
+  },
+  'laisse-retractable-led': {
+    unitPrice: 24.9,
+    label: 'Laisse de promenade automatique rétractable 3-en-1 (avec Lampe LED)',
+    supplierSku: 'ANIMO-LAISSE-RETRACTABLE-LED',
+    supplier: 'AnimoSuisse',
+    paymentLink: 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
   },
 };
 

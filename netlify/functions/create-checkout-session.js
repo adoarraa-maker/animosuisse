@@ -42,6 +42,12 @@ const CATALOG = {
     supplierSku: 'CJJJCWMY00152-Dedicated power cord',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
   },
+  'laisse-retractable-led': {
+    name: 'Laisse de promenade automatique rétractable 3-en-1 (avec Lampe LED)',
+    unitAmountCents: 2490,
+    supplierSku: 'ANIMO-LAISSE-RETRACTABLE-LED',
+    supplier: 'AnimoSuisse',
+  },
 };
 
 const SHIPPING = {

@@ -56,10 +56,18 @@ const CATALOG = {
   },
 };
 
-const SHIPPING = {
-  suisse: { label: 'Suisse — Gratuit', amountCents: 0 },
-  europe: { label: 'Europe', amountCents: 990 },
-  monde: { label: 'Reste du monde', amountCents: 1500 },
+const SHIPPING_BY_SHOP = {
+  animosuisse: {
+    suisse: { label: 'Suisse — Gratuit', amountCents: 0 },
+    europe: { label: 'Europe', amountCents: 990 },
+    monde: { label: 'Reste du monde', amountCents: 1500 },
+  },
+  marteder: {
+    geneve: { label: 'Livraison / Retrait sur Genève', amountCents: 0 },
+    suisse: { label: 'Envoi postal en Suisse', amountCents: 1800, freeFromItems: 3 },
+    europe: { label: 'Envoi postal en Europe', amountCents: 2500 },
+    monde: { label: 'Envoi postal Reste du monde', amountCents: 3500 },
+  },
 };
 
 const corsHeaders = {
@@ -179,8 +187,11 @@ exports.handler = async (event) => {
   const name = sanitizeText(body.name, 120);
   const phone = sanitizeText(body.phone, 40);
   const address = sanitizeText(body.address, 400);
-  const shippingKey = sanitizeText(body.shipping, 20) || 'suisse';
-  const shippingOption = SHIPPING[shippingKey] || SHIPPING.suisse;
+  const shopKey = sanitizeText(body.shop, 40) || 'animosuisse';
+  const SHIPPING = SHIPPING_BY_SHOP[shopKey] || SHIPPING_BY_SHOP.animosuisse;
+  const defaultShipping = shopKey === 'marteder' ? 'geneve' : 'suisse';
+  const shippingKey = sanitizeText(body.shipping, 20) || defaultShipping;
+  const shippingOption = SHIPPING[shippingKey] || SHIPPING[defaultShipping];
   const origin = resolveOrigin(event, body);
 
   const params = new URLSearchParams();
@@ -199,6 +210,7 @@ exports.handler = async (event) => {
   if (phone) params.set('metadata[customer_phone]', phone);
   if (address) params.set('metadata[customer_address]', address);
   params.set('metadata[shipping]', shippingKey);
+  params.set('metadata[shop]', shopKey);
   params.set('metadata[checkout_mode]', body.express ? 'express' : 'cart');
   params.set(
     'metadata[product_names]',

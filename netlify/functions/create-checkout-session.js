@@ -48,6 +48,12 @@ const CATALOG = {
     supplierSku: 'ANIMO-LAISSE-RETRACTABLE-LED',
     supplier: 'AnimoSuisse',
   },
+  'laisse-course-mains-libres': {
+    name: 'Laisse de course mains libres avec sac banane',
+    unitAmountCents: 2490,
+    supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
+    supplier: 'AnimoSuisse',
+  },
 };
 
 const SHIPPING = {

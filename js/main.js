@@ -54,6 +54,13 @@ const products = {
     supplier: 'AnimoSuisse',
     stripeProduct: 'laisse-retractable-led',
   },
+  'laisse-course-mains-libres': {
+    name: 'Laisse de course mains libres avec sac banane',
+    price: 24.9,
+    supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
+    supplier: 'AnimoSuisse',
+    stripeProduct: 'laisse-course-mains-libres',
+  },
 };
 
 const STRIPE_PRODUCTS = {
@@ -98,6 +105,13 @@ const STRIPE_PRODUCTS = {
     unitPrice: 24.9,
     label: 'Laisse de promenade automatique rétractable 3-en-1 (avec Lampe LED)',
     supplierSku: 'ANIMO-LAISSE-RETRACTABLE-LED',
+    supplier: 'AnimoSuisse',
+    paymentLink: 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
+  },
+  'laisse-course-mains-libres': {
+    unitPrice: 24.9,
+    label: 'Laisse de course mains libres avec sac banane',
+    supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
     supplier: 'AnimoSuisse',
     paymentLink: 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
   },
@@ -188,6 +202,9 @@ function getSupplierMeta(productId, card) {
   const fromCatalog = productId && products[productId] ? products[productId] : null;
   const activeColor = card?.querySelector?.('.color-swatch.active');
   const activeOption = card?.querySelector?.('.product-option-btn.active');
+  const sizeSelect = card?.querySelector?.('[data-size-select]');
+  const sizeKey = sizeSelect?.value || '';
+  const sizeLabel = sizeKey ? `Taille ${sizeKey}` : '';
   const sku =
     activeOption?.dataset?.optionSku ||
     card?.dataset?.supplierSku ||
@@ -203,6 +220,7 @@ function getSupplierMeta(productId, card) {
     activeOption?.dataset?.optionLabel ||
     activeColor?.dataset?.supplierVariant ||
     activeColor?.dataset?.colorLabel ||
+    sizeLabel ||
     card?.dataset?.supplierVariant ||
     fromCatalog?.supplierVariant ||
     (productId && STRIPE_PRODUCTS[productId]?.supplierVariant) ||
@@ -233,6 +251,8 @@ function getSupplierMeta(productId, card) {
     colorLabel,
     optionKey,
     optionLabel,
+    sizeKey,
+    sizeLabel,
     stripeProduct,
     price,
     paymentLink,
@@ -358,6 +378,8 @@ function addProductCardToCart(card) {
     colorLabel,
     optionKey,
     optionLabel,
+    sizeKey,
+    sizeLabel,
     stripeProduct,
     price,
   } = getSupplierMeta(productId, card);
@@ -381,20 +403,24 @@ function addProductCardToCart(card) {
     'Article AnimoSuisse';
   const displayName = colorLabel
     ? `${baseName} — ${colorLabel}`
-    : optionLabel && optionKey && optionKey !== 'jouet'
-      ? baseName
-      : baseName;
+    : sizeLabel
+      ? `${baseName} — ${sizeLabel}`
+      : optionLabel && optionKey && optionKey !== 'jouet'
+        ? baseName
+        : baseName;
 
   addToCart({
     name: baseName,
     displayName,
     variantKey: optionKey
       ? `${productId}:${optionKey}${colorKey ? `:${colorKey}` : ''}`
-      : colorKey
-        ? `${productId}:${colorKey}`
-        : productId,
-    variantLabel: variant || colorLabel || optionLabel || '',
-    variantType: colorLabel ? 'Couleur' : optionLabel ? 'Option' : '',
+      : sizeKey
+        ? `${productId}:size:${sizeKey}`
+        : colorKey
+          ? `${productId}:${colorKey}`
+          : productId,
+    variantLabel: variant || colorLabel || optionLabel || sizeLabel || '',
+    variantType: colorLabel ? 'Couleur' : sizeLabel ? 'Taille' : optionLabel ? 'Option' : '',
     price: price || catalog?.price || stripeCatalog.unitPrice,
     stripeProduct: stripeKey,
     supplierSku: sku,
@@ -403,6 +429,7 @@ function addProductCardToCart(card) {
     colorKey: colorKey || '',
     colorLabel: colorLabel || '',
     optionKey: optionKey || '',
+    sizeKey: sizeKey || '',
   });
 }
 
@@ -411,6 +438,14 @@ function initProductAddToCart() {
     updateProductOrderSummary(card);
     const select = card.querySelector('[data-shipping-select]');
     select?.addEventListener('change', () => updateProductOrderSummary(card));
+
+    const sizeSelect = card.querySelector('[data-size-select]');
+    const sizePreview = card.querySelector('[data-size-preview]');
+    sizeSelect?.addEventListener('change', () => {
+      if (sizePreview) {
+        sizePreview.innerHTML = `Taille sélectionnée : <strong>${sizeSelect.value}</strong>`;
+      }
+    });
   });
 
   document.addEventListener('click', (e) => {

@@ -1,8 +1,13 @@
 /**
  * Configuration Stripe AnimoSuisse (chargée AVANT js/main.js).
  *
- * Achat direct produit par produit via Payment Links buy.stripe.com
- * (GitHub Pages — pas besoin de Netlify Functions).
+ * Panier multi-produits :
+ * 1) Checkout Session via Netlify (recommandé) → ANIMO_STRIPE_CHECKOUT_URL
+ * 2) Fallback Payment Link si 1 seul type d’article dans le panier
+ *
+ * Après déploiement Netlify, remplacez l’URL ci-dessous par votre site :
+ *   'https://VOTRE-SITE.netlify.app/.netlify/functions/create-checkout-session'
+ * Si le site est servi UNIQUEMENT depuis Netlify, laissez '' (chemins relatifs).
  */
 window.ANIMO_STRIPE_PAYMENT_LINKS = window.ANIMO_STRIPE_PAYMENT_LINKS || {
   'brosse-vapeur': 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
@@ -13,5 +18,7 @@ window.ANIMO_STRIPE_PAYMENT_LINKS = window.ANIMO_STRIPE_PAYMENT_LINKS || {
   'laisse-course-mains-libres': 'https://buy.stripe.com/4gM5kE4AFabmagn6MzcAo0a',
 };
 
-// Optionnel : API Checkout Session (Netlify) — non requis pour l’achat direct
-window.ANIMO_STRIPE_CHECKOUT_URL = window.ANIMO_STRIPE_CHECKOUT_URL || '';
+// Netlify Checkout Session (panier multi-produits)
+window.ANIMO_STRIPE_CHECKOUT_URL =
+  window.ANIMO_STRIPE_CHECKOUT_URL ||
+  'https://phenomenal-effondrement-63c3b0.netlify.app/.netlify/functions/create-checkout-session';

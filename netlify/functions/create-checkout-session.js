@@ -125,6 +125,9 @@ function resolveOrigin(event, body) {
   const proto = event.headers['x-forwarded-proto'] || 'https';
   const host = event.headers['x-forwarded-host'] || event.headers.host || '';
   if (host) return `${proto}://${host}`.replace(/\/$/, '');
+  // Netlify injecte URL (site de prod) / DEPLOY_PRIME_URL (preview)
+  const netlifyUrl = String(process.env.URL || process.env.DEPLOY_PRIME_URL || '').replace(/\/$/, '');
+  if (netlifyUrl.startsWith('http')) return netlifyUrl;
   return 'https://adoarraa-maker.github.io/animosuisse';
 }
 
@@ -184,14 +187,13 @@ exports.handler = async (event) => {
   params.set('mode', 'payment');
   params.set('locale', 'fr');
   params.set('success_url', `${origin}/commande-merci.html?paid=1&session_id={CHECKOUT_SESSION_ID}`);
-  params.set('cancel_url', `${origin}/index.html?checkout=cancel`);
+  params.set('cancel_url', `${origin}/index.html?checkout=cancel#articles`);
   params.set('phone_number_collection[enabled]', 'true');
-  params.set('billing_address_collection', 'auto');
-  if (body.express || body.collectShippingAddress) {
-    ['CH', 'FR', 'DE', 'IT', 'AT', 'BE', 'LU', 'LI'].forEach((country) => {
-      params.append('shipping_address_collection[allowed_countries][]', country);
-    });
-  }
+  params.set('billing_address_collection', 'required');
+  // Adresse de livraison collectée sur Stripe Checkout
+  ['CH', 'FR', 'DE', 'IT', 'AT', 'BE', 'LU', 'LI'].forEach((country) => {
+    params.append('shipping_address_collection[allowed_countries][]', country);
+  });
   if (email) params.set('customer_email', email);
   if (name) params.set('metadata[customer_name]', name);
   if (phone) params.set('metadata[customer_phone]', phone);

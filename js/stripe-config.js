@@ -21,4 +21,4 @@ window.ANIMO_STRIPE_PAYMENT_LINKS = window.ANIMO_STRIPE_PAYMENT_LINKS || {
 // Netlify Checkout Session (panier multi-produits)
 window.ANIMO_STRIPE_CHECKOUT_URL =
   window.ANIMO_STRIPE_CHECKOUT_URL ||
-  'https://phenomenal-effondrement-63c3b0.netlify.app/.netlify/functions/create-checkout-session';
+  'https://phenomenal-crumble-63c3b0.netlify.app/.netlify/functions/create-checkout-session';

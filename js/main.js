@@ -43,7 +43,7 @@ const products = {
   'jouet-chat-cable': {
     name: "Câble d'alimentation dédié (Jouet Chat)",
     price: 9.9,
-    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplierSku: 'CJJJCWMY00152-Dedicated power cord',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
     stripeProduct: 'jouet-chat-cable',
   },
@@ -83,7 +83,7 @@ const STRIPE_PRODUCTS = {
   'jouet-chat-cable': {
     unitPrice: 9.9,
     label: "Câble d'alimentation dédié (Jouet Chat)",
-    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplierSku: 'CJJJCWMY00152-Dedicated power cord',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
     paymentLink: 'https://buy.stripe.com/bJe14o1ot4R20FN7QDcAo08',
   },

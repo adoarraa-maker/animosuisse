@@ -39,7 +39,7 @@ const CATALOG = {
   'jouet-chat-cable': {
     name: "Câble d'alimentation dédié (Jouet Chat)",
     unitAmountCents: 990,
-    supplierSku: 'CJJCWMY00152-Dedicated power cord',
+    supplierSku: 'CJJJCWMY00152-Dedicated power cord',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
   },
 };

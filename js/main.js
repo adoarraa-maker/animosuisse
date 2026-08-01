@@ -208,7 +208,11 @@ function getShippingCostForZone(zoneKey, itemCount = 1) {
 function getSupplierMeta(productId, card) {
   const fromCatalog = productId && products[productId] ? products[productId] : null;
   const activeColor = card?.querySelector?.('.color-swatch.active');
-  const activeOption = card?.querySelector?.('.product-option-btn.active');
+  const optionSelect = card?.querySelector?.('[data-option-select]');
+  const activeOption =
+    optionSelect?.selectedOptions?.[0] ||
+    card?.querySelector?.('.product-option-btn.active') ||
+    null;
   const sizeSelect = card?.querySelector?.('[data-size-select]');
   const sizeKey = sizeSelect?.value || '';
   const sizeLabel = sizeKey ? `Taille ${sizeKey}` : '';
@@ -234,7 +238,7 @@ function getSupplierMeta(productId, card) {
     '';
   const colorKey = activeColor?.dataset?.colorKey || '';
   const colorLabel = activeColor?.dataset?.colorLabel || '';
-  const optionKey = activeOption?.dataset?.optionKey || '';
+  const optionKey = activeOption?.dataset?.optionKey || activeOption?.value || '';
   const optionLabel = activeOption?.dataset?.optionLabel || '';
   const stripeProduct =
     activeOption?.dataset?.optionStripeProduct ||
@@ -370,7 +374,10 @@ function setCartFromProductCard(card) {
 function addProductCardToCart(card) {
   const productId = card.dataset.productId || '';
   const catalog = products[productId];
-  if (!catalog && !card.querySelector('.product-option-btn.active')) {
+  const hasOption =
+    Boolean(card.querySelector('[data-option-select]')) ||
+    Boolean(card.querySelector('.product-option-btn.active'));
+  if (!catalog && !hasOption) {
     throw new Error('Produit introuvable.');
   }
   if (isOutOfStockProduct(productId, catalog?.name || card.dataset.productName)) {
@@ -2298,22 +2305,17 @@ function initJouetChatOptions() {
     const mainImage = card.querySelector('[data-product-main]');
     const priceDisplay = card.querySelector('[data-product-price-display]');
     const preview = box.querySelector('[data-jouet-option-preview]');
-    const options = Array.from(box.querySelectorAll('.product-option-btn'));
+    const select = box.querySelector('[data-option-select]');
+    if (!select) return;
 
-    const applyOption = (btn) => {
-      if (!btn) return;
-      const label = btn.dataset.optionLabel || 'Option';
-      const price = parseFloat(btn.dataset.optionPrice || '0') || 0;
-      const imageSrc = btn.dataset.optionImage || '';
-      const sku = btn.dataset.optionSku || '';
-      const stripeProduct = btn.dataset.optionStripeProduct || '';
-      const paymentLink = btn.dataset.optionPaymentLink || '';
-
-      options.forEach((item) => {
-        const isActive = item === btn;
-        item.classList.toggle('active', isActive);
-        item.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      });
+    const applyOption = (optionEl) => {
+      if (!optionEl) return;
+      const label = optionEl.dataset.optionLabel || optionEl.textContent.trim() || 'Option';
+      const price = parseFloat(optionEl.dataset.optionPrice || '0') || 0;
+      const imageSrc = optionEl.dataset.optionImage || '';
+      const sku = optionEl.dataset.optionSku || '';
+      const stripeProduct = optionEl.dataset.optionStripeProduct || '';
+      const paymentLink = optionEl.dataset.optionPaymentLink || '';
 
       card.dataset.productPrice = price.toFixed(2);
       card.dataset.supplierSku = sku;
@@ -2327,9 +2329,7 @@ function initJouetChatOptions() {
         mainImage.alt = `${label} — AnimoSuisse`;
       }
       if (preview) {
-        preview.innerHTML = `Option : <strong>${label}</strong>${
-          sku ? ` — SKU <strong>${sku}</strong>` : ''
-        }`;
+        preview.innerHTML = `Option : <strong>${label}</strong>`;
       }
 
       card.querySelectorAll('.product-thumb').forEach((thumb) => {
@@ -2341,11 +2341,11 @@ function initJouetChatOptions() {
       updateProductOrderSummary(card);
     };
 
-    options.forEach((btn) => {
-      btn.addEventListener('click', () => applyOption(btn));
+    select.addEventListener('change', () => {
+      applyOption(select.selectedOptions[0]);
     });
 
-    applyOption(box.querySelector('.product-option-btn.active') || options[0]);
+    applyOption(select.selectedOptions[0] || select.options[0]);
   });
 }
 

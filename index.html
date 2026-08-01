@@ -61,7 +61,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260801-product-layout">
+  <link rel="stylesheet" href="css/styles.css?v=20260801-card-accordion">
 </head>
 <body>
   <!-- Navigation -->
@@ -267,13 +267,6 @@
             <div class="product-info">
               <h3 class="product-name">Brosse Vapeur 3-en-1 pour Chats et Chiens</h3>
               <div class="product-price"><span class="current">24.90 CHF</span></div>
-              <div class="product-order-actions">
-                <button
-                  type="button"
-                  class="btn btn-cart product-cart-btn btn-add-to-cart"
-                  data-id="brosse-vapeur"
-                >Ajouter au panier</button>
-              </div>
               <details class="product-more">
                 <summary class="product-more-toggle">En savoir plus</summary>
                 <div class="product-more-body">
@@ -290,6 +283,13 @@
                   </ul>
                 </div>
               </details>
+              <div class="product-order-actions">
+                <button
+                  type="button"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
+                  data-id="brosse-vapeur"
+                >Ajouter au panier</button>
+              </div>
             </div>
           </article>
 
@@ -409,13 +409,6 @@
                   Couleur sélectionnée : <strong>Rose (Cherry Blossom Pink)</strong>
                 </p>
               </div>
-              <div class="product-order-actions">
-                <button
-                  type="button"
-                  class="btn btn-cart product-cart-btn btn-add-to-cart"
-                  data-id="gourde-chien-3en1"
-                >Ajouter au panier</button>
-              </div>
               <details class="product-more">
                 <summary class="product-more-toggle">En savoir plus</summary>
                 <div class="product-more-body">
@@ -431,6 +424,13 @@
                   </ul>
                 </div>
               </details>
+              <div class="product-order-actions">
+                <button
+                  type="button"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
+                  data-id="gourde-chien-3en1"
+                >Ajouter au panier</button>
+              </div>
             </div>
           </article>
 
@@ -474,13 +474,16 @@
               <h3 class="product-name">Jouet Électrique Interactif Cache-Cache pour Chat</h3>
               <div class="product-price"><span class="current" data-product-price-display>19.90 CHF</span></div>
               <div class="fabric-variants product-option-variants" data-jouet-options>
-                <p class="variant-label" id="jouetOptionLabel">Option</p>
-                <div class="product-option-list" role="listbox" aria-labelledby="jouetOptionLabel">
-                  <button
-                    type="button"
-                    class="product-option-btn active"
-                    role="option"
-                    aria-selected="true"
+                <label class="variant-label" for="jouetOptionSelect">Option</label>
+                <select
+                  class="variant-select"
+                  id="jouetOptionSelect"
+                  data-option-select
+                  aria-label="Choisir l'option"
+                >
+                  <option
+                    value="jouet"
+                    selected
                     data-option-key="jouet"
                     data-option-label="Jouet interactif complet"
                     data-option-price="19.90"
@@ -488,15 +491,9 @@
                     data-option-sku="CJJCWMY00152"
                     data-option-stripe-product="jouet-chat-interactif"
                     data-option-payment-link="https://buy.stripe.com/dRm28sc3783efAHgn9cAo07"
-                  >
-                    <span class="product-option-title">Jouet complet</span>
-                    <span class="product-option-price">19.90 CHF</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="product-option-btn"
-                    role="option"
-                    aria-selected="false"
+                  >Jouet complet — 19.90 CHF</option>
+                  <option
+                    value="cable"
                     data-option-key="cable"
                     data-option-label="Câble d'alimentation seul"
                     data-option-price="9.90"
@@ -504,21 +501,11 @@
                     data-option-sku="CJJJCWMY00152-Dedicated power cord"
                     data-option-stripe-product="jouet-chat-cable"
                     data-option-payment-link="https://buy.stripe.com/bJe14o1ot4R20FN7QDcAo08"
-                  >
-                    <span class="product-option-title">Câble d'alimentation seul</span>
-                    <span class="product-option-price">9.90 CHF</span>
-                  </button>
-                </div>
+                  >Câble d'alimentation seul — 9.90 CHF</option>
+                </select>
                 <p class="variant-selected" data-jouet-option-preview>
-                  Option : <strong>Jouet interactif complet</strong> — SKU <strong>CJJCWMY00152</strong>
+                  Option : <strong>Jouet interactif complet</strong>
                 </p>
-              </div>
-              <div class="product-order-actions">
-                <button
-                  type="button"
-                  class="btn btn-cart product-cart-btn btn-add-to-cart"
-                  data-id="jouet-chat-interactif"
-                >Ajouter au panier</button>
               </div>
               <details class="product-more">
                 <summary class="product-more-toggle">En savoir plus</summary>
@@ -534,6 +521,13 @@
                   </ul>
                 </div>
               </details>
+              <div class="product-order-actions">
+                <button
+                  type="button"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
+                  data-id="jouet-chat-interactif"
+                >Ajouter au panier</button>
+              </div>
             </div>
           </article>
 
@@ -576,13 +570,6 @@
             <div class="product-info">
               <h3 class="product-name">Laisse de promenade automatique rétractable 3-en-1 (avec Lampe LED)</h3>
               <div class="product-price"><span class="current">29.90 CHF</span></div>
-              <div class="product-order-actions">
-                <button
-                  type="button"
-                  class="btn btn-cart product-cart-btn btn-add-to-cart"
-                  data-id="laisse-retractable-led"
-                >Ajouter au panier</button>
-              </div>
               <details class="product-more">
                 <summary class="product-more-toggle">En savoir plus</summary>
                 <div class="product-more-body">
@@ -599,6 +586,13 @@
                   </ul>
                 </div>
               </details>
+              <div class="product-order-actions">
+                <button
+                  type="button"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
+                  data-id="laisse-retractable-led"
+                >Ajouter au panier</button>
+              </div>
             </div>
           </article>
 
@@ -655,13 +649,6 @@
                   Taille sélectionnée : <strong>XS</strong>
                 </p>
               </div>
-              <div class="product-order-actions">
-                <button
-                  type="button"
-                  class="btn btn-cart product-cart-btn btn-add-to-cart"
-                  data-id="laisse-course-mains-libres"
-                >Ajouter au panier</button>
-              </div>
               <details class="product-more">
                 <summary class="product-more-toggle">En savoir plus</summary>
                 <div class="product-more-body">
@@ -679,6 +666,13 @@
                   </ul>
                 </div>
               </details>
+              <div class="product-order-actions">
+                <button
+                  type="button"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
+                  data-id="laisse-course-mains-libres"
+                >Ajouter au panier</button>
+              </div>
             </div>
           </article>
 
@@ -686,46 +680,6 @@
 
         <div class="products-footer">
           <a href="#contact" class="btn btn-outline">Une question ? Contactez-nous</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Informations produits (section globale, hors grille) -->
-    <section class="product-info-panels" id="infos-produits" aria-labelledby="productInfoPanelsTitle">
-      <div class="container product-info-panels-inner">
-        <div class="section-header centered">
-          <span class="section-label">À savoir</span>
-          <h2 class="section-title" id="productInfoPanelsTitle">Informations produits</h2>
-          <p class="section-desc">Tout ce qu’il faut savoir avant de commander chez AnimoSuisse.</p>
-        </div>
-        <div class="product-info-panels-grid">
-          <div class="product-info-panel">
-            <h3>Pour qui est ce produit&nbsp;?</h3>
-            <ul>
-              <li>Propriétaires de chiens et de chats souhaitant simplifier le quotidien</li>
-              <li>Familles qui recherchent des accessoires pratiques pour la promenade et le toilettage</li>
-              <li>Chiens de petite, moyenne ou grande taille selon le produit choisi</li>
-              <li>Amateurs d’équipements prêts à l’emploi, sans complication</li>
-            </ul>
-          </div>
-          <div class="product-info-panel">
-            <h3>Ce qui fait la différence</h3>
-            <ul>
-              <li>Fonctions 3-en-1 pensées pour les balades et le bien-être</li>
-              <li>Finitions soignées&nbsp;: poignées ergonomiques, bandes réfléchissantes, LED</li>
-              <li>Options utiles&nbsp;: couleurs, tailles XS–L, variantes jouet ou câble</li>
-              <li>Sélection AnimoSuisse, testée pour un usage quotidien</li>
-            </ul>
-          </div>
-          <div class="product-info-panel">
-            <h3>Livraison &amp; garantie</h3>
-            <ul>
-              <li>Livraison rapide en Suisse — gratuite sur le territoire suisse</li>
-              <li>Expédition soignée depuis Genève</li>
-              <li>Paiement sécurisé via Stripe (carte, Apple Pay, PayPal)</li>
-              <li>Retours selon nos CGV — service client à votre écoute</li>
-            </ul>
-          </div>
         </div>
       </div>
     </section>
@@ -1049,6 +1003,6 @@
   </button>
 
   <script src="js/stripe-config.js?v=20260801-panier-page"></script>
-  <script src="js/main.js?v=20260801-panier-page"></script>
+  <script src="js/main.js?v=20260801-jouet-select"></script>
 </body>
 </html>

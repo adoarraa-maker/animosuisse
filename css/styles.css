@@ -1049,7 +1049,7 @@ ul {
 }
 
 .product-card--compact .product-order-actions {
-  margin-top: 0.15rem;
+  margin-top: 0.35rem;
 }
 
 .product-card--compact .product-cart-btn {
@@ -1065,7 +1065,7 @@ ul {
 }
 
 .product-card--compact .product-more {
-  margin: 0.15rem 0 0;
+  margin: 0.05rem 0 0;
   border-top: 1px solid var(--color-border);
   padding-top: 0.55rem;
 }
@@ -1141,94 +1141,6 @@ ul {
 
 #productsGrid > :not(.product-card) {
   display: none !important;
-}
-
-.product-info-panels {
-  padding: 4.5rem 0 5rem;
-  margin: 0;
-  background:
-    linear-gradient(180deg, rgba(243, 238, 230, 0.55) 0%, transparent 100%),
-    var(--color-bg, #faf8f5);
-  border-top: 1px solid var(--color-border);
-}
-
-.product-info-panels-inner {
-  max-width: 1040px;
-  margin: 0 auto;
-}
-
-.product-info-panels .section-header.centered {
-  text-align: center;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 36rem;
-}
-
-.product-info-panels .section-header.centered .section-desc {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.product-info-panels-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.35rem;
-  margin-top: 2.25rem;
-  text-align: left;
-}
-
-.product-info-panel {
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1.5rem 1.45rem 1.6rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.product-info-panel h3 {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0 0 0.95rem;
-  line-height: 1.25;
-  text-align: center;
-}
-
-.product-info-panel ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.product-info-panel li {
-  position: relative;
-  padding-left: 1.1rem;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
-
-.product-info-panel li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.55em;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-accent);
-}
-
-@media (max-width: 900px) {
-  .product-info-panels-grid {
-    grid-template-columns: 1fr;
-    max-width: 28rem;
-    margin-left: auto;
-    margin-right: auto;
-  }
 }
 
 .product-description {
@@ -1397,51 +1309,15 @@ ul {
 }
 
 .product-color-variants {
-  margin-bottom: 0.85rem;
+  margin-bottom: 0;
 }
 
 .product-option-variants {
-  margin: 0.75rem 0 0.85rem;
+  margin: 0;
 }
 
-.product-option-list {
-  display: grid;
-  gap: 0.5rem;
-  margin: 0.45rem 0 0.55rem;
-}
-
-.product-option-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+.product-option-variants .variant-select {
   width: 100%;
-  padding: 0.7rem 0.85rem;
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
-  cursor: pointer;
-  text-align: left;
-  transition: var(--transition);
-}
-
-.product-option-btn:hover,
-.product-option-btn.active {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 1px rgba(139, 90, 60, 0.14);
-}
-
-.product-option-title {
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.product-option-price {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-accent);
-  white-space: nowrap;
 }
 
 .fabric-swatch-list {

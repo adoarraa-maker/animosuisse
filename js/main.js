@@ -2324,6 +2324,7 @@ function initJouetChatOptions() {
 
   const mainImage = card.querySelector('[data-product-main]');
   const preview = card.querySelector('[data-jouet-option-preview]');
+  const thumbs = Array.from(card.querySelectorAll('.product-thumb'));
 
   const readOptionAttr = (optionEl, name) => {
     if (!optionEl) return '';
@@ -2335,7 +2336,33 @@ function initJouetChatOptions() {
     );
   };
 
-  const applyOption = () => {
+  const isCableThumb = (thumb) => {
+    if (!thumb) return false;
+    const key = thumb.getAttribute('data-option-key') || '';
+    const src = (thumb.getAttribute('data-thumb-src') || '').toLowerCase();
+    return key === 'cable' || src.includes('cable');
+  };
+
+  const setActiveThumb = (activeThumb, fallbackSrc) => {
+    let matched = false;
+    thumbs.forEach((thumb) => {
+      const isActive =
+        activeThumb === thumb ||
+        (!activeThumb && thumb.getAttribute('data-thumb-src') === fallbackSrc);
+      if (isActive) matched = true;
+      thumb.classList.toggle('active', isActive);
+      thumb.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    if (!matched && fallbackSrc) {
+      const bySrc = thumbs.find((t) => t.getAttribute('data-thumb-src') === fallbackSrc);
+      if (bySrc) {
+        bySrc.classList.add('active');
+        bySrc.setAttribute('aria-selected', 'true');
+      }
+    }
+  };
+
+  const applyOption = ({ imageSrcOverride = null, activeThumb = null } = {}) => {
     const optionEl = selectEl.options[selectEl.selectedIndex];
     if (!optionEl) return;
 
@@ -2359,7 +2386,11 @@ function initJouetChatOptions() {
           ? 9.9
           : 19.9;
     const priceText = `${price.toFixed(2)} CHF`;
-    const imageSrc = readOptionAttr(optionEl, 'option-image');
+    const defaultImage = readOptionAttr(optionEl, 'option-image');
+    const imageSrc = imageSrcOverride || defaultImage;
+    const imageAlt =
+      (activeThumb && activeThumb.getAttribute('data-thumb-alt')) ||
+      `${label} — AnimoSuisse`;
     const sku = readOptionAttr(optionEl, 'option-sku');
     const stripeProduct = readOptionAttr(optionEl, 'option-stripe-product');
     const paymentLink = readOptionAttr(optionEl, 'option-payment-link');
@@ -2377,23 +2408,36 @@ function initJouetChatOptions() {
 
     if (mainImage && imageSrc) {
       mainImage.src = imageSrc;
-      mainImage.alt = `${label} — AnimoSuisse`;
+      mainImage.alt = imageAlt;
     }
     if (preview) {
       preview.innerHTML = `Option : <strong>${label}</strong>`;
     }
 
-    card.querySelectorAll('.product-thumb').forEach((thumb) => {
-      const match = thumb.getAttribute('data-thumb-src') === imageSrc;
-      thumb.classList.toggle('active', match);
-      thumb.setAttribute('aria-selected', match ? 'true' : 'false');
-    });
-
+    setActiveThumb(activeThumb, imageSrc);
     updateProductOrderSummary(card);
   };
 
-  selectEl.addEventListener('change', applyOption);
-  selectEl.addEventListener('input', applyOption);
+  const syncFromThumb = (thumb) => {
+    if (!thumb || !card.contains(thumb)) return;
+    const nextValue = isCableThumb(thumb) ? 'cable' : 'jouet';
+    if (selectEl.value !== nextValue) {
+      selectEl.value = nextValue;
+    }
+    const src = thumb.getAttribute('data-thumb-src');
+    applyOption({ imageSrcOverride: src, activeThumb: thumb });
+  };
+
+  selectEl.addEventListener('change', () => applyOption());
+  selectEl.addEventListener('input', () => applyOption());
+
+  // Clic miniature → option + prix (en plus du changement d’image)
+  card.addEventListener('click', (event) => {
+    const thumb = event.target.closest('.product-thumb');
+    if (!thumb || !card.contains(thumb)) return;
+    syncFromThumb(thumb);
+  });
+
   applyOption();
 }
 

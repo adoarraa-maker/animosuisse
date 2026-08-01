@@ -2315,83 +2315,86 @@ function initGourdeColorVariants() {
 }
 
 function initJouetChatOptions() {
-  const PRICE_BY_VALUE = {
-    jouet: 19.9,
-    cable: 9.9,
+  const selectEl = document.getElementById('jouet-select');
+  const priceEl = document.getElementById('jouet-price');
+  if (!selectEl) return;
+
+  const card = selectEl.closest('.product-card');
+  if (!card) return;
+
+  const mainImage = card.querySelector('[data-product-main]');
+  const preview = card.querySelector('[data-jouet-option-preview]');
+
+  const readOptionAttr = (optionEl, name) => {
+    if (!optionEl) return '';
+    const dataKey = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    return (
+      optionEl.getAttribute(`data-${name}`) ||
+      optionEl.dataset?.[dataKey] ||
+      ''
+    );
   };
 
-  document.querySelectorAll('[data-jouet-options]').forEach((box) => {
-    const card = box.closest('.product-card');
-    if (!card) return;
-    const mainImage = card.querySelector('[data-product-main]');
-    const priceDisplays = card.querySelectorAll(
-      '[data-product-price-display], .product-price .current',
-    );
-    const preview = box.querySelector('[data-jouet-option-preview]');
-    const select = box.querySelector('[data-option-select]');
-    if (!select) return;
+  const applyOption = () => {
+    const optionEl = selectEl.options[selectEl.selectedIndex];
+    if (!optionEl) return;
 
-    const readOptionAttr = (optionEl, name) => {
-      if (!optionEl) return '';
-      const dataKey = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-      return (
-        optionEl.getAttribute(`data-${name}`) ||
-        optionEl.dataset?.[dataKey] ||
-        ''
-      );
-    };
+    const value = optionEl.value || '';
+    const optionText = (optionEl.textContent || '').toLowerCase();
+    const isCable =
+      value === 'cable' ||
+      optionText.includes('câble') ||
+      optionText.includes('cable') ||
+      optionText.includes('9.90');
 
-    const applyOption = () => {
-      const optionEl = select.options[select.selectedIndex];
-      if (!optionEl) return;
+    const label =
+      readOptionAttr(optionEl, 'option-label') ||
+      optionEl.textContent.trim() ||
+      'Option';
+    const priceFromAttr = parseFloat(readOptionAttr(optionEl, 'option-price') || '');
+    const price =
+      Number.isFinite(priceFromAttr) && priceFromAttr > 0
+        ? priceFromAttr
+        : isCable
+          ? 9.9
+          : 19.9;
+    const priceText = `${price.toFixed(2)} CHF`;
+    const imageSrc = readOptionAttr(optionEl, 'option-image');
+    const sku = readOptionAttr(optionEl, 'option-sku');
+    const stripeProduct = readOptionAttr(optionEl, 'option-stripe-product');
+    const paymentLink = readOptionAttr(optionEl, 'option-payment-link');
 
-      const value = optionEl.value || '';
-      const label =
-        readOptionAttr(optionEl, 'option-label') ||
-        optionEl.textContent.trim() ||
-        'Option';
-      const priceFromAttr = parseFloat(readOptionAttr(optionEl, 'option-price') || '');
-      const price =
-        (Number.isFinite(priceFromAttr) && priceFromAttr > 0
-          ? priceFromAttr
-          : PRICE_BY_VALUE[value]) || 0;
-      const imageSrc = readOptionAttr(optionEl, 'option-image');
-      const sku = readOptionAttr(optionEl, 'option-sku');
-      const stripeProduct = readOptionAttr(optionEl, 'option-stripe-product');
-      const paymentLink = readOptionAttr(optionEl, 'option-payment-link');
-      const priceText = `${price.toFixed(2)} CHF`;
+    card.dataset.productPrice = price.toFixed(2);
+    card.dataset.supplierSku = sku;
+    card.dataset.stripeProduct = stripeProduct;
+    card.dataset.stripePaymentLink = paymentLink;
+    card.dataset.supplierVariant = label;
 
-      card.dataset.productPrice = price.toFixed(2);
-      card.dataset.supplierSku = sku;
-      card.dataset.stripeProduct = stripeProduct;
-      card.dataset.stripePaymentLink = paymentLink;
-      card.dataset.supplierVariant = label;
+    if (priceEl) priceEl.textContent = priceText;
+    card.querySelectorAll('[data-product-price-display], .product-price .current').forEach((el) => {
+      el.textContent = priceText;
+    });
 
-      priceDisplays.forEach((el) => {
-        el.textContent = priceText;
-      });
+    if (mainImage && imageSrc) {
+      mainImage.src = imageSrc;
+      mainImage.alt = `${label} — AnimoSuisse`;
+    }
+    if (preview) {
+      preview.innerHTML = `Option : <strong>${label}</strong>`;
+    }
 
-      if (mainImage && imageSrc) {
-        mainImage.src = imageSrc;
-        mainImage.alt = `${label} — AnimoSuisse`;
-      }
-      if (preview) {
-        preview.innerHTML = `Option : <strong>${label}</strong>`;
-      }
+    card.querySelectorAll('.product-thumb').forEach((thumb) => {
+      const match = thumb.getAttribute('data-thumb-src') === imageSrc;
+      thumb.classList.toggle('active', match);
+      thumb.setAttribute('aria-selected', match ? 'true' : 'false');
+    });
 
-      card.querySelectorAll('.product-thumb').forEach((thumb) => {
-        const match = thumb.getAttribute('data-thumb-src') === imageSrc;
-        thumb.classList.toggle('active', match);
-        thumb.setAttribute('aria-selected', match ? 'true' : 'false');
-      });
+    updateProductOrderSummary(card);
+  };
 
-      updateProductOrderSummary(card);
-    };
-
-    select.addEventListener('change', applyOption);
-    select.addEventListener('input', applyOption);
-    applyOption();
-  });
+  selectEl.addEventListener('change', applyOption);
+  selectEl.addEventListener('input', applyOption);
+  applyOption();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

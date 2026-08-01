@@ -1064,23 +1064,124 @@ ul {
   font-size: 0.8125rem;
 }
 
+.product-card--compact .product-more {
+  margin: 0.15rem 0 0;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.55rem;
+}
+
+.product-more-toggle {
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-accent-dark, var(--color-accent));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  user-select: none;
+}
+
+.product-more-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.product-more-toggle::after {
+  content: '+';
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.product-more[open] .product-more-toggle::after {
+  content: '−';
+}
+
+.product-more-body {
+  padding: 0.65rem 0 0.15rem;
+}
+
+.product-more-body .product-description {
+  margin-bottom: 0.65rem;
+}
+
+.product-more-body .product-features {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.product-more-body .product-features li {
+  position: relative;
+  padding-left: 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.product-more-body .product-features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+#productsGrid {
+  align-items: start;
+}
+
+#productsGrid > :not(.product-card) {
+  display: none !important;
+}
+
 .product-info-panels {
-  margin-top: 3rem;
-  padding-top: 0.5rem;
+  padding: 4.5rem 0 5rem;
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(243, 238, 230, 0.55) 0%, transparent 100%),
+    var(--color-bg, #faf8f5);
+  border-top: 1px solid var(--color-border);
+}
+
+.product-info-panels-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.product-info-panels .section-header.centered {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 36rem;
+}
+
+.product-info-panels .section-header.centered .section-desc {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .product-info-panels-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.75rem;
+  gap: 1.35rem;
+  margin-top: 2.25rem;
+  text-align: left;
 }
 
 .product-info-panel {
-  background: #f3eee6;
+  background: var(--color-surface, #fff);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1.35rem 1.4rem 1.5rem;
+  padding: 1.5rem 1.45rem 1.6rem;
   box-shadow: var(--shadow-sm);
 }
 
@@ -1088,8 +1189,9 @@ ul {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 0.9rem;
+  margin: 0 0 0.95rem;
   line-height: 1.25;
+  text-align: center;
 }
 
 .product-info-panel ul {
@@ -1123,6 +1225,9 @@ ul {
 @media (max-width: 900px) {
   .product-info-panels-grid {
     grid-template-columns: 1fr;
+    max-width: 28rem;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -1441,7 +1546,8 @@ ul {
 
 .products-footer {
   text-align: center;
-  margin-top: 3.5rem;
+  margin-top: 2.5rem;
+  padding-bottom: 0.5rem;
 }
 
 /* ---- Mèches ---- */

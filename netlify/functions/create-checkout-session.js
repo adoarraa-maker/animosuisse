@@ -198,7 +198,7 @@ exports.handler = async (event) => {
   params.set('mode', 'payment');
   params.set('locale', 'fr');
   params.set('success_url', `${origin}/commande-merci.html?paid=1&session_id={CHECKOUT_SESSION_ID}`);
-  params.set('cancel_url', `${origin}/index.html?checkout=cancel#articles`);
+  params.set('cancel_url', `${origin}/panier.html?checkout=cancel`);
   params.set('phone_number_collection[enabled]', 'true');
   params.set('billing_address_collection', 'required');
   // Adresse de livraison collectée sur Stripe Checkout

@@ -61,7 +61,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260801-cart-drawer">
+  <link rel="stylesheet" href="css/styles.css?v=20260801-panier-page">
 </head>
 <body>
   <!-- Navigation -->
@@ -90,13 +90,13 @@
         <li><a href="#contact">Contact</a></li>
       </ul>
       <div class="nav-actions">
-        <button class="cart-btn cart-btn--menu" id="cartToggle" aria-label="Panier" aria-expanded="false">
+        <a href="panier.html" class="cart-btn cart-btn--menu" id="cartToggle" aria-label="Panier">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M6 6L5 3H2"/>
           </svg>
           <span class="cart-label">Panier</span>
           <span class="cart-count">0</span>
-        </button>
+        </a>
       </div>
     </nav>
   </header>
@@ -1087,6 +1087,7 @@
       <div class="footer-links">
         <h4>Boutique</h4>
         <ul>
+          <li><a href="panier.html">Panier</a></li>
           <li><a href="#articles">Nouveautés</a></li>
           <li><a href="#articles">Brosse Vapeur 3-en-1</a></li>
           <li><a href="#articles">Jouet Cache-Cache pour Chat</a></li>
@@ -1153,7 +1154,7 @@
     ▲
   </button>
 
-  <script src="js/stripe-config.js?v=20260731-crumble"></script>
-  <script src="js/main.js?v=20260731-crumble"></script>
+  <script src="js/stripe-config.js?v=20260801-panier-page"></script>
+  <script src="js/main.js?v=20260801-panier-page"></script>
 </body>
 </html>

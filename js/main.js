@@ -24,6 +24,7 @@ const products = {
     supplierSku: 'ANIMO-BROSSE-VAPEUR-3EN1',
     supplier: 'AnimoSuisse',
     stripeProduct: 'brosse-vapeur',
+    image: 'images/hero-brosse-vapeur.png',
   },
   'gourde-chien-3en1': {
     name: 'Gourde Multifonction 3-en-1 pour Chien (Eau, Croquettes & Sacs)',
@@ -32,6 +33,7 @@ const products = {
     supplierVariant: '300ml Garbage Bag / Cherry Blossom Pink',
     supplier: 'CJ Dropshipping',
     stripeProduct: 'gourde-chien-3en1',
+    image: 'images/gourde-chien-3en1.png',
   },
   'jouet-chat-interactif': {
     name: 'Jouet Électrique Interactif Cache-Cache pour Chat',
@@ -39,6 +41,7 @@ const products = {
     supplierSku: 'CJJCWMY00152',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
     stripeProduct: 'jouet-chat-interactif',
+    image: 'images/jouet-chat-interactif.jpg',
   },
   'jouet-chat-cable': {
     name: "Câble d'alimentation dédié (Jouet Chat)",
@@ -46,6 +49,7 @@ const products = {
     supplierSku: 'CJJJCWMY00152-Dedicated power cord',
     supplier: 'CJ Dropshipping / Yiwu Renfan Trading Co., Ltd.',
     stripeProduct: 'jouet-chat-cable',
+    image: 'images/jouet-chat-cable-alimentation.jpg',
   },
   'laisse-retractable-led': {
     name: 'Laisse de promenade automatique rétractable 3-en-1 (avec Lampe LED)',
@@ -53,6 +57,7 @@ const products = {
     supplierSku: 'ANIMO-LAISSE-RETRACTABLE-LED',
     supplier: 'AnimoSuisse',
     stripeProduct: 'laisse-retractable-led',
+    image: 'images/dog.jpg',
   },
   'laisse-course-mains-libres': {
     name: 'Laisse de course mains libres avec sac banane',
@@ -60,6 +65,7 @@ const products = {
     supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
     supplier: 'AnimoSuisse',
     stripeProduct: 'laisse-course-mains-libres',
+    image: 'images/course-mains-libres-1.jpg',
   },
 };
 
@@ -410,6 +416,14 @@ function addProductCardToCart(card) {
         ? baseName
         : baseName;
 
+  const imageEl = card.querySelector('.product-image, [data-product-main]');
+  const imageFromCard = imageEl?.getAttribute('src') || '';
+  const image =
+    imageFromCard ||
+    products[stripeKey]?.image ||
+    products[productId]?.image ||
+    '';
+
   addToCart({
     name: baseName,
     displayName,
@@ -431,6 +445,7 @@ function addProductCardToCart(card) {
     colorLabel: colorLabel || '',
     optionKey: optionKey || '',
     sizeKey: sizeKey || '',
+    image,
   });
 }
 
@@ -1351,10 +1366,73 @@ function updateCheckoutButton() {
 
   if (checkoutBtn) {
     checkoutBtn.disabled = cart.length === 0;
-    checkoutBtn.textContent = 'Passer à la caisse';
+    checkoutBtn.textContent = document.body.classList.contains('page-panier')
+      ? 'Aller à la caisse'
+      : 'Passer à la caisse';
   }
   if (note && !note.classList.contains('hidden')) {
     note.textContent = plan.note || 'Vérifiez votre panier, puis payez en toute sécurité via Stripe.';
+  }
+}
+
+function getCartItemImage(item) {
+  if (item?.image) return item.image;
+  const key = item?.stripeProduct || item?.productId || '';
+  if (key && products[key]?.image) return products[key].image;
+  if (key && STRIPE_PRODUCTS[key] && products[key]?.image) return products[key].image;
+  return 'images/animaux.png';
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function renderCartPage() {
+  const list = document.getElementById('cartPageList');
+  if (!list) return;
+
+  if (cart.length === 0) {
+    list.innerHTML = `
+      <div class="cart-empty-state">
+        <p class="cart-empty">Votre panier est vide.</p>
+        <a href="index.html#articles" class="btn btn-outline">Voir les produits</a>
+      </div>
+    `;
+  } else {
+    list.innerHTML = cart
+      .map((item, index) => {
+        const title = escapeHtml(item.displayName || item.name);
+        const variant = item.variantLabel
+          ? `<p class="cart-page-item-variant">${escapeHtml(item.variantType || 'Variante')} : <strong>${escapeHtml(item.variantLabel)}</strong></p>`
+          : '';
+        const image = escapeHtml(getCartItemImage(item));
+        return `
+          <article class="cart-page-item">
+            <div class="cart-page-item-image">
+              <img src="${image}" alt="${title}" loading="lazy" decoding="async">
+            </div>
+            <div class="cart-page-item-info">
+              <h3 class="cart-page-item-name">${title}</h3>
+              ${variant}
+              <p class="cart-page-item-unit">${formatPrice(item.price)} / unité</p>
+            </div>
+            <div class="cart-page-item-actions">
+              <span class="cart-page-item-price">${formatPrice(item.price * item.quantity)}</span>
+              <div class="cart-item-qty-controls">
+                <button type="button" class="cart-qty-btn" data-qty-delta="-1" data-index="${index}" aria-label="Diminuer la quantité">−</button>
+                <span class="cart-item-qty">${item.quantity}</span>
+                <button type="button" class="cart-qty-btn" data-qty-delta="1" data-index="${index}" aria-label="Augmenter la quantité">+</button>
+              </div>
+              <button type="button" class="cart-page-item-remove" data-index="${index}">Retirer</button>
+            </div>
+          </article>
+        `;
+      })
+      .join('');
   }
 }
 
@@ -1362,12 +1440,13 @@ function renderCart() {
   const cartList = document.getElementById('cartList');
   const cartCountEls = document.querySelectorAll('.cart-count');
 
-  if (!cartList) return;
-
-  if (cart.length === 0) {
-    cartList.innerHTML = '<p class="cart-empty">Votre panier est vide.</p>';
-  } else {
-    cartList.innerHTML = cart.map((item, index) => `
+  if (cartList) {
+    if (cart.length === 0) {
+      cartList.innerHTML = '<p class="cart-empty">Votre panier est vide.</p>';
+    } else {
+      cartList.innerHTML = cart
+        .map(
+          (item, index) => `
       <div class="cart-item">
         <div class="cart-item-info">
           <p class="cart-item-name">${item.displayName || item.name}</p>
@@ -1385,8 +1464,13 @@ function renderCart() {
         </div>
         <button type="button" class="cart-item-remove" data-index="${index}" aria-label="Retirer du panier">&times;</button>
       </div>
-    `).join('');
+    `
+        )
+        .join('');
+    }
   }
+
+  renderCartPage();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   cartCountEls.forEach((el) => {
@@ -1416,8 +1500,12 @@ function addToCart(item) {
 
   renderCart();
   saveCart();
-  openCartPanel();
+  if (document.body.classList.contains('page-panier')) {
+    showToast(`« ${item.displayName || item.name} » mis à jour`);
+    return;
+  }
   showToast(`« ${item.displayName || item.name} » ajouté au panier`);
+  window.location.href = 'panier.html';
 }
 
 function getFabricVariantKey(card) {
@@ -1443,7 +1531,7 @@ function initCart() {
       return;
     }
 
-    const removeBtn = e.target.closest('.cart-item-remove');
+    const removeBtn = e.target.closest('.cart-item-remove, .cart-page-item-remove');
     if (removeBtn) {
       const index = parseInt(removeBtn.dataset.index, 10);
       cart.splice(index, 1);
@@ -1538,6 +1626,13 @@ function initCartPanel() {
   const close = document.getElementById('cartClose');
   const backdrop = document.getElementById('cartBackdrop');
 
+  // Lien vers panier.html : pas de tiroir
+  if (toggle && toggle.tagName === 'A') {
+    close?.addEventListener('click', closeCartPanel);
+    backdrop?.addEventListener('click', closeCartPanel);
+    return;
+  }
+
   toggle?.addEventListener('click', () => {
     const panel = document.getElementById('cartPanel');
     if (panel?.classList.contains('open')) {
@@ -1553,6 +1648,28 @@ function initCartPanel() {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeCartPanel();
+  });
+}
+
+function initCartPromo() {
+  const applyBtn = document.getElementById('cartPromoApply');
+  const input = document.getElementById('cartPromoCode');
+  const feedback = document.getElementById('cartPromoFeedback');
+  if (!applyBtn || !input) return;
+
+  applyBtn.addEventListener('click', () => {
+    const code = input.value.trim().toUpperCase();
+    if (!feedback) return;
+    feedback.hidden = false;
+    if (!code) {
+      feedback.textContent = 'Saisissez un code promo.';
+      feedback.classList.add('is-error');
+      feedback.classList.remove('is-ok');
+      return;
+    }
+    feedback.textContent = 'Aucun code promo actif pour le moment.';
+    feedback.classList.add('is-error');
+    feedback.classList.remove('is-ok');
   });
 }
 
@@ -1749,9 +1866,10 @@ function initCartCheckout() {
   const cancelBtn = document.getElementById('cartCheckoutCancel');
   const stripePayLink = document.getElementById('cartStripePayLink');
 
-  if (!checkoutBtn || !checkoutForm) return;
+  if (!checkoutBtn) return;
 
   const showCheckoutForm = (show) => {
+    if (!checkoutForm) return;
     checkoutForm.classList.toggle('hidden', !show);
     checkoutBtn.classList.toggle('hidden', show);
     document.querySelector('.cart-checkout-note')?.classList.toggle('hidden', show);
@@ -1775,20 +1893,17 @@ function initCartCheckout() {
     if (cart.length === 0) return;
     updateCheckoutButton();
 
-    // Panier → Stripe directement (tous les articles + quantités)
     try {
       await startCartStripeCheckout(checkoutBtn);
     } catch (error) {
       console.error('cart checkout', error);
-      // Si l’API multi-produits échoue, proposer le formulaire classique
       showToast(error.message || 'Paiement Stripe indisponible.');
-      showCheckoutForm(true);
+      if (checkoutForm) showCheckoutForm(true);
     }
   });
 
   cancelBtn?.addEventListener('click', () => showCheckoutForm(false));
 
-  // Bouton Stripe du formulaire (coordonnées) → même panier complet
   updateStripePayLink();
 
   stripePayLink?.addEventListener('click', async (e) => {
@@ -1810,7 +1925,7 @@ function initCartCheckout() {
     }
   });
 
-  checkoutForm.addEventListener('submit', (e) => {
+  checkoutForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     stripePayLink?.click();
   });
@@ -2240,6 +2355,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCart();
   initCartPanel();
   initCartCheckout();
+  initCartPromo();
   initProductAddToCart();
   initContactForm();
   initFabricVariants();

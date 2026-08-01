@@ -210,14 +210,29 @@ function getSupplierMeta(productId, card) {
   const activeColor = card?.querySelector?.('.color-swatch.active');
   const optionSelect = card?.querySelector?.('[data-option-select]');
   const activeOption =
-    optionSelect?.selectedOptions?.[0] ||
+    (optionSelect && optionSelect.options[optionSelect.selectedIndex]) ||
     card?.querySelector?.('.product-option-btn.active') ||
     null;
   const sizeSelect = card?.querySelector?.('[data-size-select]');
   const sizeKey = sizeSelect?.value || '';
   const sizeLabel = sizeKey ? `Taille ${sizeKey}` : '';
+  const readOpt = (name) => {
+    if (!activeOption) return '';
+    return (
+      activeOption.getAttribute(`data-${name}`) ||
+      activeOption.dataset?.[
+        name.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+      ] ||
+      ''
+    );
+  };
+  const optionKey = readOpt('option-key') || activeOption?.value || '';
+  const optionLabel = readOpt('option-label') || '';
+  const optionPriceRaw = parseFloat(readOpt('option-price') || '');
+  const optionPriceFallback =
+    optionKey === 'cable' ? 9.9 : optionKey === 'jouet' ? 19.9 : 0;
   const sku =
-    activeOption?.dataset?.optionSku ||
+    readOpt('option-sku') ||
     card?.dataset?.supplierSku ||
     fromCatalog?.supplierSku ||
     (productId && STRIPE_PRODUCTS[productId]?.supplierSku) ||
@@ -228,7 +243,7 @@ function getSupplierMeta(productId, card) {
     (productId && STRIPE_PRODUCTS[productId]?.supplier) ||
     '';
   const variant =
-    activeOption?.dataset?.optionLabel ||
+    optionLabel ||
     activeColor?.dataset?.supplierVariant ||
     activeColor?.dataset?.colorLabel ||
     sizeLabel ||
@@ -238,19 +253,20 @@ function getSupplierMeta(productId, card) {
     '';
   const colorKey = activeColor?.dataset?.colorKey || '';
   const colorLabel = activeColor?.dataset?.colorLabel || '';
-  const optionKey = activeOption?.dataset?.optionKey || activeOption?.value || '';
-  const optionLabel = activeOption?.dataset?.optionLabel || '';
   const stripeProduct =
-    activeOption?.dataset?.optionStripeProduct ||
+    readOpt('option-stripe-product') ||
     card?.dataset?.stripeProduct ||
     fromCatalog?.stripeProduct ||
     productId ||
     '';
-  const price = activeOption?.dataset?.optionPrice
-    ? parseFloat(activeOption.dataset.optionPrice)
-    : parseFloat(card?.dataset?.productPrice || fromCatalog?.price || '0') || 0;
+  const price =
+    Number.isFinite(optionPriceRaw) && optionPriceRaw > 0
+      ? optionPriceRaw
+      : optionPriceFallback ||
+        parseFloat(card?.dataset?.productPrice || fromCatalog?.price || '0') ||
+        0;
   const paymentLink =
-    activeOption?.dataset?.optionPaymentLink ||
+    readOpt('option-payment-link') ||
     card?.dataset?.stripePaymentLink ||
     STRIPE_PRODUCTS[stripeProduct]?.paymentLink ||
     '';
@@ -2299,23 +2315,51 @@ function initGourdeColorVariants() {
 }
 
 function initJouetChatOptions() {
+  const PRICE_BY_VALUE = {
+    jouet: 19.9,
+    cable: 9.9,
+  };
+
   document.querySelectorAll('[data-jouet-options]').forEach((box) => {
     const card = box.closest('.product-card');
     if (!card) return;
     const mainImage = card.querySelector('[data-product-main]');
-    const priceDisplay = card.querySelector('[data-product-price-display]');
+    const priceDisplays = card.querySelectorAll(
+      '[data-product-price-display], .product-price .current',
+    );
     const preview = box.querySelector('[data-jouet-option-preview]');
     const select = box.querySelector('[data-option-select]');
     if (!select) return;
 
-    const applyOption = (optionEl) => {
+    const readOptionAttr = (optionEl, name) => {
+      if (!optionEl) return '';
+      const dataKey = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      return (
+        optionEl.getAttribute(`data-${name}`) ||
+        optionEl.dataset?.[dataKey] ||
+        ''
+      );
+    };
+
+    const applyOption = () => {
+      const optionEl = select.options[select.selectedIndex];
       if (!optionEl) return;
-      const label = optionEl.dataset.optionLabel || optionEl.textContent.trim() || 'Option';
-      const price = parseFloat(optionEl.dataset.optionPrice || '0') || 0;
-      const imageSrc = optionEl.dataset.optionImage || '';
-      const sku = optionEl.dataset.optionSku || '';
-      const stripeProduct = optionEl.dataset.optionStripeProduct || '';
-      const paymentLink = optionEl.dataset.optionPaymentLink || '';
+
+      const value = optionEl.value || '';
+      const label =
+        readOptionAttr(optionEl, 'option-label') ||
+        optionEl.textContent.trim() ||
+        'Option';
+      const priceFromAttr = parseFloat(readOptionAttr(optionEl, 'option-price') || '');
+      const price =
+        (Number.isFinite(priceFromAttr) && priceFromAttr > 0
+          ? priceFromAttr
+          : PRICE_BY_VALUE[value]) || 0;
+      const imageSrc = readOptionAttr(optionEl, 'option-image');
+      const sku = readOptionAttr(optionEl, 'option-sku');
+      const stripeProduct = readOptionAttr(optionEl, 'option-stripe-product');
+      const paymentLink = readOptionAttr(optionEl, 'option-payment-link');
+      const priceText = `${price.toFixed(2)} CHF`;
 
       card.dataset.productPrice = price.toFixed(2);
       card.dataset.supplierSku = sku;
@@ -2323,7 +2367,10 @@ function initJouetChatOptions() {
       card.dataset.stripePaymentLink = paymentLink;
       card.dataset.supplierVariant = label;
 
-      if (priceDisplay) priceDisplay.textContent = `${price.toFixed(2)} CHF`;
+      priceDisplays.forEach((el) => {
+        el.textContent = priceText;
+      });
+
       if (mainImage && imageSrc) {
         mainImage.src = imageSrc;
         mainImage.alt = `${label} — AnimoSuisse`;
@@ -2341,11 +2388,9 @@ function initJouetChatOptions() {
       updateProductOrderSummary(card);
     };
 
-    select.addEventListener('change', () => {
-      applyOption(select.selectedOptions[0]);
-    });
-
-    applyOption(select.selectedOptions[0] || select.options[0]);
+    select.addEventListener('change', applyOption);
+    select.addEventListener('input', applyOption);
+    applyOption();
   });
 }
 

@@ -9,6 +9,11 @@
  *   'https://VOTRE-SITE.netlify.app/.netlify/functions/create-checkout-session'
  * Si le site est servi UNIQUEMENT depuis Netlify, laissez '' (chemins relatifs).
  */
+// Clé publique Stripe Live (pk_live_…). La clé secrète sk_live_ reste uniquement dans Netlify.
+window.ANIMO_STRIPE_PUBLISHABLE_KEY =
+  window.ANIMO_STRIPE_PUBLISHABLE_KEY ||
+  'pk_live_51Tw2q6K6svF9shFXO1pIjOZQgAZq99RLQdYRlGTIIKsekBhypU47kubdTR3elHKZPLwle0v2fyvCWRhJXgNMJC4r00boub0901';
+
 window.ANIMO_STRIPE_PAYMENT_LINKS = window.ANIMO_STRIPE_PAYMENT_LINKS || {
   'brosse-vapeur': 'https://buy.stripe.com/dRm28sc3783efAHgn9cAo07',
   'gourde-chien-3en1': 'https://buy.stripe.com/5kQ8wQd7berC74b2wjcAo05',

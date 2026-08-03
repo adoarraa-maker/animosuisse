@@ -119,7 +119,7 @@ const STRIPE_PRODUCTS = {
     label: 'Laisse de course mains libres avec sac banane',
     supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
     supplier: 'AnimoSuisse',
-    paymentLink: 'https://buy.stripe.com/4gM5kE4AFabmagn6MzcAo0a',
+    paymentLink: 'https://buy.stripe.com/fZueVe4AF83e4W31sfcAo06',
   },
 };
 

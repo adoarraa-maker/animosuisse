@@ -477,27 +477,26 @@ function resolveProductPaymentUrl(card) {
   const productId = card.dataset.productId || '';
   const meta = getSupplierMeta(productId, card);
   const stripeKey = meta.stripeProduct || products[productId]?.stripeProduct || productId;
-  if (!STRIPE_PRODUCTS[stripeKey]) {
-    throw new Error('Cette variante n’est pas encore disponible au paiement.');
-  }
-
-  const url = getPaymentLinkForPayload({
-    items: [
-      {
-        productKey: stripeKey,
-        quantity: 1,
-        supplierSku: meta.sku,
-        variantLabel: meta.variant || meta.sizeLabel || meta.colorLabel || '',
-      },
-    ],
-  });
-  if (!url) {
+  const raw = String(
+    meta.paymentLink ||
+      window.ANIMO_STRIPE_PAYMENT_LINKS?.[stripeKey] ||
+      STRIPE_PRODUCTS[stripeKey]?.paymentLink ||
+      card.dataset.stripePaymentLink ||
+      ''
+  ).trim();
+  if (!raw || !/^https?:\/\//i.test(raw)) {
     throw new Error('Lien de paiement Stripe indisponible pour ce produit.');
   }
-  return url;
+  try {
+    const url = new URL(raw);
+    url.searchParams.set('quantity', '1');
+    return url.toString();
+  } catch {
+    return raw;
+  }
 }
 
-function initProductAddToCart() {
+function initProductBuyButtons() {
   document.querySelectorAll('.product-card[data-product-price]').forEach((card) => {
     updateProductOrderSummary(card);
     const select = card.querySelector('[data-shipping-select]');
@@ -513,15 +512,23 @@ function initProductAddToCart() {
   });
 
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-add-to-cart, .btn-order-stripe');
+    const btn = e.target.closest('.btn-buy-stripe, .btn-add-to-cart, .btn-order-stripe');
     if (!btn || btn.disabled) return;
     e.preventDefault();
     const card = btn.closest('.product-card');
     if (!card) return;
+    const previousLabel = btn.textContent;
     try {
-      addProductCardToCart(card);
+      const payUrl = resolveProductPaymentUrl(card);
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      btn.textContent = 'Redirection vers Stripe…';
+      redirectToStripe(payUrl);
     } catch (error) {
-      showToast(error.message || 'Impossible d’ajouter au panier.');
+      btn.disabled = false;
+      btn.classList.remove('is-loading');
+      btn.textContent = previousLabel || 'Acheter';
+      showToast(error.message || 'Paiement Stripe indisponible.');
     }
   });
 }
@@ -2442,13 +2449,17 @@ function initJouetChatOptions() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  purgeOutOfStockFromCart();
-  renderCart();
-  initCart();
-  initCartPanel();
-  initCartCheckout();
-  initCartPromo();
-  initProductAddToCart();
+  // Ancien panier local (test / Netlify Checkout Session) désactivé :
+  // chaque bouton produit redirige vers son Payment Link buy.stripe.com.
+  try {
+    localStorage.removeItem(CART_STORAGE_KEY);
+    sessionStorage.removeItem(STRIPE_PENDING_KEY);
+  } catch {
+    /* ignore */
+  }
+  cart = [];
+
+  initProductBuyButtons();
   initContactForm();
   initFabricVariants();
   initMecheVariant();
@@ -2468,7 +2479,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout') === 'cancel') {
-      showToast('Paiement annulé. Votre panier est toujours disponible.');
+      showToast('Paiement annulé. Vous pouvez relancer l’achat depuis le produit.');
       params.delete('checkout');
       const clean = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
       window.history.replaceState({}, '', clean);

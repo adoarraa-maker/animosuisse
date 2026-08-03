@@ -1,15 +1,10 @@
 /**
  * Configuration Stripe AnimoSuisse (chargée AVANT js/main.js).
  *
- * Panier multi-produits :
- * 1) Checkout Session via Netlify (recommandé) → ANIMO_STRIPE_CHECKOUT_URL
- * 2) Fallback Payment Link si 1 seul type d’article dans le panier
- *
- * Après déploiement Netlify, remplacez l’URL ci-dessous par votre site :
- *   'https://VOTRE-SITE.netlify.app/.netlify/functions/create-checkout-session'
- * Si le site est servi UNIQUEMENT depuis Netlify, laissez '' (chemins relatifs).
+ * Achat direct : chaque bouton produit redirige vers son Payment Link Live.
+ * (Plus de panier / Checkout Session Netlify côté site.)
  */
-// Clé publique Stripe Live (pk_live_…). La clé secrète sk_live_ reste uniquement dans Netlify.
+// Clé publique Stripe Live (pk_live_…). La clé secrète sk_live_ reste uniquement dans le Dashboard Stripe / Netlify si besoin.
 window.ANIMO_STRIPE_PUBLISHABLE_KEY =
   window.ANIMO_STRIPE_PUBLISHABLE_KEY ||
   'pk_live_51Tw2q6K6svF9shFXO1pIjOZQgAZq99RLQdYRlGTIIKsekBhypU47kubdTR3elHKZPLwle0v2fyvCWRhJXgNMJC4r00boub0901';
@@ -23,7 +18,5 @@ window.ANIMO_STRIPE_PAYMENT_LINKS = window.ANIMO_STRIPE_PAYMENT_LINKS || {
   'laisse-course-mains-libres': 'https://buy.stripe.com/fZueVe4AF83e4W31sfcAo06',
 };
 
-// Netlify Checkout Session (panier multi-produits)
-window.ANIMO_STRIPE_CHECKOUT_URL =
-  window.ANIMO_STRIPE_CHECKOUT_URL ||
-  'https://phenomenal-crumble-63c3b0.netlify.app/.netlify/functions/create-checkout-session';
+// Panier multi-produits désactivé (achat direct via Payment Links).
+window.ANIMO_STRIPE_CHECKOUT_URL = window.ANIMO_STRIPE_CHECKOUT_URL || '';

@@ -477,26 +477,27 @@ function resolveProductPaymentUrl(card) {
   const productId = card.dataset.productId || '';
   const meta = getSupplierMeta(productId, card);
   const stripeKey = meta.stripeProduct || products[productId]?.stripeProduct || productId;
-  const raw = String(
-    meta.paymentLink ||
-      window.ANIMO_STRIPE_PAYMENT_LINKS?.[stripeKey] ||
-      STRIPE_PRODUCTS[stripeKey]?.paymentLink ||
-      card.dataset.stripePaymentLink ||
-      ''
-  ).trim();
-  if (!raw || !/^https?:\/\//i.test(raw)) {
+  if (!STRIPE_PRODUCTS[stripeKey]) {
+    throw new Error('Cette variante n’est pas encore disponible au paiement.');
+  }
+
+  const url = getPaymentLinkForPayload({
+    items: [
+      {
+        productKey: stripeKey,
+        quantity: 1,
+        supplierSku: meta.sku,
+        variantLabel: meta.variant || meta.sizeLabel || meta.colorLabel || '',
+      },
+    ],
+  });
+  if (!url) {
     throw new Error('Lien de paiement Stripe indisponible pour ce produit.');
   }
-  try {
-    const url = new URL(raw);
-    url.searchParams.set('quantity', '1');
-    return url.toString();
-  } catch {
-    return raw;
-  }
+  return url;
 }
 
-function initProductBuyButtons() {
+function initProductAddToCart() {
   document.querySelectorAll('.product-card[data-product-price]').forEach((card) => {
     updateProductOrderSummary(card);
     const select = card.querySelector('[data-shipping-select]');
@@ -512,23 +513,15 @@ function initProductBuyButtons() {
   });
 
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-buy-stripe, .btn-add-to-cart, .btn-order-stripe');
+    const btn = e.target.closest('.btn-add-to-cart, .btn-order-stripe');
     if (!btn || btn.disabled) return;
     e.preventDefault();
     const card = btn.closest('.product-card');
     if (!card) return;
-    const previousLabel = btn.textContent;
     try {
-      const payUrl = resolveProductPaymentUrl(card);
-      btn.disabled = true;
-      btn.classList.add('is-loading');
-      btn.textContent = 'Redirection vers Stripe…';
-      redirectToStripe(payUrl);
+      addProductCardToCart(card);
     } catch (error) {
-      btn.disabled = false;
-      btn.classList.remove('is-loading');
-      btn.textContent = previousLabel || 'Acheter';
-      showToast(error.message || 'Paiement Stripe indisponible.');
+      showToast(error.message || 'Impossible d’ajouter au panier.');
     }
   });
 }
@@ -1190,6 +1183,8 @@ function buildPaymentLinkSession(payload) {
 }
 
 async function createStripeCheckoutSession(customPayload = null) {
+  assertStripeLiveConfig();
+
   const isExpress = Boolean(customPayload?.express);
   const plan = isExpress
     ? {
@@ -1225,7 +1220,7 @@ async function createStripeCheckoutSession(customPayload = null) {
     console.error('sessionStorage order', error);
   }
 
-  // 1) Checkout Session Netlify (panier multi-produits)
+  // 1) Checkout Session Netlify (panier multi-produits) — Live uniquement (sk_live_)
   let lastError = 'Impossible de créer le paiement Stripe.';
   const endpoints = getStripeCheckoutApiFallbacks();
 
@@ -1261,11 +1256,16 @@ async function createStripeCheckoutSession(customPayload = null) {
         /* ignore */
       }
       lastError =
-        'API Stripe Netlify introuvable. Déployez sur Netlify et définissez STRIPE_SECRET_KEY, ou renseignez ANIMO_STRIPE_CHECKOUT_URL.';
+        'API Stripe Netlify introuvable. Déployez sur Netlify et définissez STRIPE_SECRET_KEY=sk_live_…, ou renseignez ANIMO_STRIPE_CHECKOUT_URL.';
       continue;
     }
 
     if (response.ok && data.url) {
+      if (isStripeTestCheckoutUrl(data.url) || data.livemode === false) {
+        throw new Error(
+          'Stripe a renvoyé une session TEST (cs_test_…). Remplacez STRIPE_SECRET_KEY par sk_live_… dans Netlify, puis redéployez.'
+        );
+      }
       return data;
     }
 
@@ -1282,20 +1282,25 @@ async function createStripeCheckoutSession(customPayload = null) {
 
     lastError =
       response.status === 500
-        ? 'Erreur serveur Stripe. Vérifiez STRIPE_SECRET_KEY (sk_live_… ou sk_test_…) dans Netlify.'
+        ? 'Erreur serveur Stripe. Vérifiez STRIPE_SECRET_KEY=sk_live_… dans Netlify (pas sk_test_…).'
         : 'Impossible de créer le paiement Stripe.';
   }
 
-  // 2) Fallback Payment Link si un seul type d’article
+  // 2) Fallback Payment Link Live si un seul type d’article
   const linkFallback = buildPaymentLinkSession(payload);
-  if (linkFallback) return linkFallback;
+  if (linkFallback) {
+    if (isStripeTestCheckoutUrl(linkFallback.url)) {
+      throw new Error('Payment Link TEST refusé. Utilisez uniquement des liens buy.stripe.com Live.');
+    }
+    return linkFallback;
+  }
 
   const distinctProducts = [
     ...new Set((payload.items || []).map((item) => item.productKey).filter(Boolean)),
   ];
   if (distinctProducts.length > 1) {
     throw new Error(
-      'Panier multi-produits : déployez Netlify avec STRIPE_SECRET_KEY (sk_live_/sk_test_), puis réessayez.',
+      'Panier multi-produits : déployez Netlify avec STRIPE_SECRET_KEY=sk_live_…, puis réessayez.',
     );
   }
 
@@ -1323,9 +1328,43 @@ function notifyOrderInBackground(payload) {
   }
 }
 
+function assertStripeLiveConfig() {
+  const pk = String(
+    window.ANIMO_STRIPE_PUBLISHABLE_KEY ||
+      window.STRIPE_PUBLISHABLE_KEY ||
+      ''
+  ).trim();
+  if (pk.startsWith('pk_test_')) {
+    throw new Error(
+      'Clé Stripe TEST détectée (pk_test_…). Configurez pk_live_… dans js/stripe-config.js.'
+    );
+  }
+  if (pk && !pk.startsWith('pk_live_')) {
+    throw new Error(
+      'Clé publique Stripe invalide. Utilisez uniquement pk_live_… (mode réel).'
+    );
+  }
+}
+
+function isStripeTestCheckoutUrl(url) {
+  const value = String(url || '');
+  return (
+    /cs_test_/i.test(value) ||
+    /sk_test_/i.test(value) ||
+    /pk_test_/i.test(value) ||
+    /mode=test/i.test(value)
+  );
+}
+
 function redirectToStripe(payUrl) {
   const url = payUrl;
   if (!url) return;
+  if (isStripeTestCheckoutUrl(url)) {
+    showToast(
+      'Paiement TEST bloqué. Le checkout doit utiliser Stripe Live (pk_live_ / sk_live_).'
+    );
+    throw new Error('URL Stripe en mode TEST refusée.');
+  }
   try {
     window.location.assign(url);
   } catch (error) {
@@ -1530,12 +1569,10 @@ function addToCart(item) {
 
   renderCart();
   saveCart();
-  if (document.body.classList.contains('page-panier')) {
-    showToast(`« ${item.displayName || item.name} » mis à jour`);
-    return;
-  }
   showToast(`« ${item.displayName || item.name} » ajouté au panier`);
-  window.location.href = 'panier.html';
+  if (document.body.classList.contains('page-panier')) return;
+  // Rester sur la boutique pour ajouter d’autres articles (comme Marteder).
+  openCartPanel();
 }
 
 function getFabricVariantKey(card) {
@@ -2449,17 +2486,13 @@ function initJouetChatOptions() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Ancien panier local (test / Netlify Checkout Session) désactivé :
-  // chaque bouton produit redirige vers son Payment Link buy.stripe.com.
-  try {
-    localStorage.removeItem(CART_STORAGE_KEY);
-    sessionStorage.removeItem(STRIPE_PENDING_KEY);
-  } catch {
-    /* ignore */
-  }
-  cart = [];
-
-  initProductBuyButtons();
+  purgeOutOfStockFromCart();
+  renderCart();
+  initCart();
+  initCartPanel();
+  initCartCheckout();
+  initCartPromo();
+  initProductAddToCart();
   initContactForm();
   initFabricVariants();
   initMecheVariant();
@@ -2479,7 +2512,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout') === 'cancel') {
-      showToast('Paiement annulé. Vous pouvez relancer l’achat depuis le produit.');
+      showToast('Paiement annulé. Votre panier est toujours disponible.');
       params.delete('checkout');
       const clean = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
       window.history.replaceState({}, '', clean);

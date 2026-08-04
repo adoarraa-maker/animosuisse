@@ -131,10 +131,96 @@
             </li>
           </ul>
         </div>
+        <button type="button" class="cart-btn cart-btn--menu" id="cartToggle" aria-label="Panier" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M6 6L5 3H2"/>
+          </svg>
+          <span class="cart-label">Panier</span>
+          <span class="cart-count">0</span>
+        </button>
       </div>
     </nav>
   </header>
   <div id="google_translate_element" aria-hidden="true"></div>
+
+  <!-- Panier interactif -->
+  <div class="cart-panel" id="cartPanel" aria-hidden="true">
+    <div class="cart-panel-backdrop" id="cartBackdrop"></div>
+    <aside class="cart-panel-drawer" role="dialog" aria-labelledby="cartPanelTitle">
+      <div class="cart-panel-header">
+        <h2 id="cartPanelTitle">Votre panier</h2>
+        <button type="button" class="cart-panel-close" id="cartClose" aria-label="Fermer le panier">&times;</button>
+      </div>
+      <div class="cart-panel-scroll">
+        <div class="cart-panel-body" id="cartList">
+          <p class="cart-empty">Votre panier est vide.</p>
+        </div>
+        <div class="cart-panel-footer">
+          <div class="cart-totals">
+            <p class="cart-panel-subtotal">Sous-total : <strong id="cartSubtotal">0 CHF</strong></p>
+            <p class="cart-panel-shipping">Livraison : <strong id="cartShipping">Gratuit</strong></p>
+            <p class="cart-panel-total">Total : <strong id="cartTotal">0 CHF</strong></p>
+          </div>
+          <button type="button" class="btn btn-cart cart-checkout-btn" id="cartCheckoutBtn" disabled>
+            Passer à la caisse
+          </button>
+          <p class="cart-checkout-note">Ajoutez 2–3 articles, puis payez le panier en une fois via Stripe Live.</p>
+          <p class="cart-checkout-note"><a href="panier.html">Ouvrir la page panier complète</a></p>
+          <form class="cart-checkout-form hidden" id="cartCheckoutForm" novalidate>
+            <p class="cart-checkout-form-title">Coordonnées pour finaliser le paiement</p>
+            <label class="form-label" for="checkoutName">Nom complet</label>
+            <input class="form-input" type="text" id="checkoutName" name="name" required autocomplete="name">
+            <label class="form-label" for="checkoutEmail">E-mail</label>
+            <input class="form-input" type="email" id="checkoutEmail" name="email" required autocomplete="email">
+            <label class="form-label" for="checkoutPhone">Téléphone</label>
+            <input class="form-input" type="tel" id="checkoutPhone" name="phone" required autocomplete="tel">
+            <label class="form-label" for="checkoutAddress">Adresse de livraison</label>
+            <textarea class="form-input form-textarea" id="checkoutAddress" name="address" rows="3" required placeholder="Rue, numéro, NPA, ville, pays"></textarea>
+
+            <label class="form-label" for="checkoutShipping">Choix de la livraison</label>
+            <select class="form-input variant-select cart-shipping-select" id="checkoutShipping" name="shipping" required aria-label="Choix de la livraison">
+              <option value="suisse" selected>Suisse — Gratuit (0.00 CHF)</option>
+              <option value="europe">Europe — 9.90 CHF</option>
+              <option value="monde">Reste du monde — 15.00 CHF</option>
+            </select>
+            <p class="cart-shipping-hint" id="cartShippingHint"></p>
+
+            <p class="cart-panel-total cart-panel-total--final">
+              Total final : <strong id="cartFinalTotal">0 CHF</strong>
+            </p>
+
+            <p class="cart-stripe-qty-hint" id="cartStripeQtyHint" hidden></p>
+
+            <button
+              type="button"
+              id="cartStripePayLink"
+              class="btn btn-stripe cart-stripe-pay-btn"
+            >
+              Payer par carte (Stripe)
+            </button>
+            <div class="payment-methods" aria-label="Moyens de paiement acceptés">
+              <div class="payment-methods-icons">
+                <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
+                  <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#1A1F71"/><text x="24" y="21" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">VISA</text></svg>
+                </span>
+                <span class="payment-icon payment-icon--mastercard" title="Mastercard" aria-label="Mastercard">
+                  <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#111"/><circle cx="19" cy="16" r="8" fill="#EB001B"/><circle cx="29" cy="16" r="8" fill="#F79E1B"/><path d="M24 10.2a8 8 0 0 1 0 11.6 8 8 0 0 1 0-11.6z" fill="#FF5F00"/></svg>
+                </span>
+                <span class="payment-icon payment-icon--applepay" title="Apple Pay" aria-label="Apple Pay">
+                  <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#000"/><text x="24" y="20" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="8" font-weight="600"> Pay</text><path fill="#fff" d="M14.2 11.2c.5-.6.9-1.5.8-2.4-.8 0-1.8.5-2.3 1.2-.5.6-.9 1.5-.8 2.4.9.1 1.8-.4 2.3-1.2zm.8 1.1c-1.2-.1-2.3.7-2.9.7-.6 0-1.5-.7-2.5-.6-1.3 0-2.4.7-3.1 1.9-1.3 2.3-.3 5.7.9 7.5.6.9 1.3 1.9 2.3 1.8.9-.1 1.3-.6 2.4-.6s1.4.6 2.4.6c1 0 1.6-.9 2.3-1.8.7-.9 1-1.8 1-1.9-.1 0-1.9-.7-1.9-2.9 0-1.8 1.5-2.7 1.6-2.7-.9-1.3-2.2-1.4-2.5-1.4z"/></svg>
+                </span>
+                <span class="payment-icon payment-icon--paypal" title="PayPal" aria-label="PayPal">
+                  <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#003087"/><text x="24" y="20" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="9" font-weight="700">PayPal</text></svg>
+                </span>
+              </div>
+              <p class="payment-methods-note">Paiement sécurisé par Carte Bancaire, Apple Pay et PayPal</p>
+            </div>
+            <button type="button" class="btn btn-outline cart-checkout-cancel" id="cartCheckoutCancel">Retour au panier</button>
+          </form>
+        </div>
+      </div>
+    </aside>
+  </div>
 
   <main>
     <!-- Couverture de bienvenue (présentation uniquement) -->
@@ -247,9 +333,9 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-buy-stripe"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
                   data-id="brosse-vapeur"
-                >Acheter</button>
+                >Ajouter au panier</button>
                 <div class="product-pay-badges" aria-label="Paiement sécurisé">
                   <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
                     <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#1A1F71"/><text x="24" y="21" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">VISA</text></svg>
@@ -406,9 +492,9 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-buy-stripe"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
                   data-id="gourde-chien-3en1"
-                >Acheter</button>
+                >Ajouter au panier</button>
                 <div class="product-pay-badges" aria-label="Paiement sécurisé">
                   <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
                     <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#1A1F71"/><text x="24" y="21" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">VISA</text></svg>
@@ -521,9 +607,9 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-buy-stripe"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
                   data-id="jouet-chat-interactif"
-                >Acheter</button>
+                >Ajouter au panier</button>
                 <div class="product-pay-badges" aria-label="Paiement sécurisé">
                   <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
                     <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#1A1F71"/><text x="24" y="21" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">VISA</text></svg>
@@ -604,9 +690,9 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-buy-stripe"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
                   data-id="laisse-retractable-led"
-                >Acheter</button>
+                >Ajouter au panier</button>
                 <div class="product-pay-badges" aria-label="Paiement sécurisé">
                   <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
                     <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#1A1F71"/><text x="24" y="21" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">VISA</text></svg>
@@ -702,9 +788,9 @@
               <div class="product-order-actions">
                 <button
                   type="button"
-                  class="btn btn-cart product-cart-btn btn-buy-stripe"
+                  class="btn btn-cart product-cart-btn btn-add-to-cart"
                   data-id="laisse-course-mains-libres"
-                >Acheter</button>
+                >Ajouter au panier</button>
                 <div class="product-pay-badges" aria-label="Paiement sécurisé">
                   <span class="payment-icon payment-icon--visa" title="Visa" aria-label="Visa">
                     <svg viewBox="0 0 48 32" role="img" aria-hidden="true"><rect width="48" height="32" rx="4" fill="#1A1F71"/><text x="24" y="21" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">VISA</text></svg>
@@ -982,6 +1068,7 @@
       <div class="footer-links">
         <h4>Boutique</h4>
         <ul>
+          <li><a href="panier.html">Panier</a></li>
           <li><a href="#articles">Nouveautés</a></li>
           <li><a href="#articles">Brosse Vapeur 3-en-1</a></li>
           <li><a href="#articles">Jouet Cache-Cache pour Chat</a></li>
@@ -1048,8 +1135,8 @@
     ▲
   </button>
 
-  <script src="js/stripe-config.js?v=20260803-direct-buy"></script>
-  <script src="js/main.js?v=20260803-direct-buy"></script>
+  <script src="js/stripe-config.js?v=20260803-cart-live"></script>
+  <script src="js/main.js?v=20260803-cart-live"></script>
   <script src="js/i18n-translate.js?v=101"></script>
   <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>

@@ -2,8 +2,14 @@
  * Crée une Stripe Checkout Session avec le montant exact du panier.
  *
  * Variables d'environnement Netlify (Site settings → Environment variables) :
- *   STRIPE_SECRET_KEY = sk_live_... ou sk_test_...
+ *   STRIPE_SECRET_KEY = sk_live_...   ← OBLIGATOIRE (mode Live réel)
  *
+ * Où la définir :
+ *   Netlify Dashboard → votre site → Site configuration → Environment variables
+ *   → Add variable → Key: STRIPE_SECRET_KEY  Value: sk_live_...
+ *   Scopes: Production (et Preview si besoin) → Save → Deploys → Trigger deploy
+ *
+ * Ne jamais committer sk_live_ / sk_test_ dans le dépôt.
  * Les prix unitaires sont recalculés côté serveur (jamais ceux du navigateur).
  * Aucune dépendance npm : appelle l'API Stripe en HTTPS natif.
  */
@@ -97,24 +103,32 @@ function validateStripeSecretKey(secret) {
     return {
       ok: false,
       error:
-        'STRIPE_SECRET_KEY manquante. Ajoutez-la dans Netlify → Site configuration → Environment variables.',
+        'STRIPE_SECRET_KEY manquante. Ajoutez-la dans Netlify → Site configuration → Environment variables (valeur sk_live_…), puis Trigger deploy.',
     };
   }
   if (key.startsWith('pk_')) {
     return {
       ok: false,
       error:
-        'Mauvaise clé Stripe : une clé publique (pk_live_/pk_test_) a été configurée. Remplacez STRIPE_SECRET_KEY par la clé secrète (sk_live_… ou sk_test_…) dans Netlify, puis redéployez.',
+        'Mauvaise clé Stripe : une clé publique (pk_…) a été configurée. Remplacez STRIPE_SECRET_KEY par la clé secrète sk_live_… dans Netlify, puis redéployez.',
     };
   }
-  if (!key.startsWith('sk_live_') && !key.startsWith('sk_test_')) {
+  // Force Live : une clé test produit des sessions cs_test_… (paiements fictifs).
+  if (key.startsWith('sk_test_')) {
     return {
       ok: false,
       error:
-        'STRIPE_SECRET_KEY invalide. Elle doit commencer par sk_live_ ou sk_test_ (Dashboard Stripe → Développeurs → Clés API).',
+        'STRIPE_SECRET_KEY est encore en mode TEST (sk_test_…). Remplacez-la par sk_live_… dans Netlify → Environment variables, puis Trigger deploy. Les sessions cs_test_… ne sont plus acceptées.',
     };
   }
-  return { ok: true, key };
+  if (!key.startsWith('sk_live_')) {
+    return {
+      ok: false,
+      error:
+        'STRIPE_SECRET_KEY invalide. Elle doit commencer par sk_live_ (Dashboard Stripe → Développeurs → Clés API → mode Live).',
+    };
+  }
+  return { ok: true, key, mode: 'live' };
 }
 
 function mapStripeError(data) {
@@ -144,20 +158,33 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers: corsHeaders, body: '' };
   }
 
-  // Diagnostic sans exposer la clé : GET → { keyType: 'secret' | 'publishable' | ... }
+  // Diagnostic sans exposer la clé : GET → { mode, keyType, ok }
   if (event.httpMethod === 'GET') {
     const raw = String(process.env.STRIPE_SECRET_KEY || '').trim();
     let keyType = 'missing';
-    if (raw.startsWith('sk_live_') || raw.startsWith('sk_test_')) keyType = 'secret';
-    else if (raw.startsWith('pk_live_') || raw.startsWith('pk_test_')) keyType = 'publishable';
-    else if (raw) keyType = 'invalid';
+    let mode = 'unknown';
+    if (raw.startsWith('sk_live_')) {
+      keyType = 'secret';
+      mode = 'live';
+    } else if (raw.startsWith('sk_test_')) {
+      keyType = 'secret';
+      mode = 'test';
+    } else if (raw.startsWith('pk_live_') || raw.startsWith('pk_test_')) {
+      keyType = 'publishable';
+      mode = raw.startsWith('pk_live_') ? 'live' : 'test';
+    } else if (raw) {
+      keyType = 'invalid';
+    }
+    const ok = keyType === 'secret' && mode === 'live';
     return json(200, {
-      ok: keyType === 'secret',
+      ok,
       keyType,
-      hint:
-        keyType === 'secret'
-          ? 'Clé secrète détectée.'
-          : 'STRIPE_SECRET_KEY doit être sk_live_… ou sk_test_… (pas pk_…). Modifiez la variable puis Trigger deploy.',
+      mode,
+      hint: ok
+        ? 'Clé secrète Live (sk_live_…) détectée — Checkout réel.'
+        : mode === 'test'
+          ? 'Clé TEST détectée (sk_test_/pk_test_). Remplacez STRIPE_SECRET_KEY par sk_live_… dans Netlify, puis Trigger deploy.'
+          : 'STRIPE_SECRET_KEY doit être sk_live_… (pas pk_…, pas sk_test_…). Modifiez la variable puis Trigger deploy.',
     });
   }
 

@@ -81,7 +81,7 @@ const products = {
     supplierSku: 'ANIMO-LAISSE-DOUBLE-360',
     supplier: 'AnimoSuisse',
     stripeProduct: 'laisse-double-360',
-    image: 'images/laisse-double-360-1.png',
+    image: 'images/laisse-double-360-3.png',
   },
 };
 

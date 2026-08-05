@@ -66,6 +66,12 @@ const CATALOG = {
     supplierSku: 'ANIMO-COLLIER-GPS-4G',
     supplier: 'AnimoSuisse',
   },
+  'laisse-double-360': {
+    name: 'Laisse Double Réfléchissante 360° pour Chiens',
+    unitAmountCents: 2450,
+    supplierSku: 'ANIMO-LAISSE-DOUBLE-360',
+    supplier: 'AnimoSuisse',
+  },
 };
 
 const SHIPPING_BY_SHOP = {

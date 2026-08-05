@@ -75,6 +75,14 @@ const products = {
     stripeProduct: 'collier-gps-4g',
     image: 'images/collier-gps-app.png',
   },
+  'laisse-double-360': {
+    name: 'Laisse Double Réfléchissante 360° pour Chiens',
+    price: 24.5,
+    supplierSku: 'ANIMO-LAISSE-DOUBLE-360',
+    supplier: 'AnimoSuisse',
+    stripeProduct: 'laisse-double-360',
+    image: 'images/laisse-double-360-1.png',
+  },
 };
 
 const STRIPE_PRODUCTS = {
@@ -135,6 +143,12 @@ const STRIPE_PRODUCTS = {
     supplierSku: 'ANIMO-COLLIER-GPS-4G',
     supplier: 'AnimoSuisse',
     paymentLink: 'https://buy.stripe.com/dRm3cw0kp0AM3RZgn9cAo0d',
+  },
+  'laisse-double-360': {
+    unitPrice: 24.5,
+    label: 'Laisse Double Réfléchissante 360° pour Chiens',
+    supplierSku: 'ANIMO-LAISSE-DOUBLE-360',
+    supplier: 'AnimoSuisse',
   },
 };
 
@@ -2325,12 +2339,16 @@ function initProductThumbs() {
 }
 
 function initGourdeColorVariants() {
-  document.querySelectorAll('[data-gourde-colors]').forEach((box) => {
+  document.querySelectorAll('[data-gourde-colors], [data-product-colors]').forEach((box) => {
     const card = box.closest('.product-card');
     if (!card) return;
     const mainImage = card.querySelector('[data-product-main]');
-    const preview = box.querySelector('[data-gourde-color-preview]');
+    const preview = box.querySelector('[data-gourde-color-preview], [data-color-preview]');
     const swatches = Array.from(box.querySelectorAll('.color-swatch'));
+    const productName =
+      card.dataset.productName ||
+      card.querySelector('.product-name')?.textContent?.trim() ||
+      'Article AnimoSuisse';
 
     const applyColor = (swatch) => {
       if (!swatch) return;
@@ -2346,7 +2364,7 @@ function initGourdeColorVariants() {
 
       if (mainImage && imageSrc) {
         mainImage.src = imageSrc;
-        mainImage.alt = `Gourde Multifonction 3-en-1 — ${label}`;
+        mainImage.alt = `${productName} — ${label}`;
       }
 
       card.dataset.supplierVariant = supplierVariant;

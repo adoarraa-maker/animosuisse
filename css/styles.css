@@ -868,7 +868,7 @@ body > .skiptranslate {
   object-position: center center;
 }
 
-/* Recadrage agressif : masque bordures noires / flèches UI des captures */
+/* Recadrage agressif : masque cadres irréguliers / flèches UI / coins noirs */
 .product-card .product-image,
 .product-card .product-thumb img {
   object-fit: cover !important;
@@ -878,7 +878,7 @@ body > .skiptranslate {
 
 .product-card--thumbs .product-image,
 .product-card--thumbs .product-thumb img {
-  transform: scale(1.28);
+  transform: scale(1.32);
 }
 
 .product-card--collier-gps .product-image-wrap,
@@ -887,27 +887,27 @@ body > .skiptranslate {
 .product-card--collier-gps .product-thumb,
 .product-card--laisse-double .product-thumb,
 .product-card--brosse-vapeur .product-thumb {
-  overflow: hidden;
+  overflow: hidden !important;
   aspect-ratio: 1 / 1;
   background: #fff;
 }
 
 .product-card--collier-gps .product-image,
 .product-card--collier-gps .product-thumb img {
-  transform: scale(1.48);
-  object-position: center 48%;
+  transform: scale(1.72);
+  object-position: center 46%;
 }
 
 .product-card--laisse-double .product-image,
 .product-card--laisse-double .product-thumb img {
-  transform: scale(1.5);
-  object-position: center 46%;
+  transform: scale(1.82);
+  object-position: center 42%;
 }
 
 .product-card--brosse-vapeur .product-image,
 .product-card--brosse-vapeur .product-thumb img {
-  transform: scale(1.42);
-  object-position: center 48%;
+  transform: scale(1.7);
+  object-position: center 46%;
 }
 
 .product-card--collier-gps .product-thumbs {
@@ -937,12 +937,12 @@ body > .skiptranslate {
 .product-image--brosse-crop {
   object-fit: cover;
   object-position: center 42%;
-  transform: scale(1.42);
+  transform: scale(1.7);
   transform-origin: center center;
 }
 
 .product-card:hover .product-image--brosse-crop {
-  transform: scale(1.48);
+  transform: scale(1.76);
 }
 
 .product-card:hover .product-image {
@@ -950,23 +950,38 @@ body > .skiptranslate {
 }
 
 .product-card--thumbs:hover .product-image {
-  transform: scale(1.32);
+  transform: scale(1.36);
 }
 
 .product-card--collier-gps:hover .product-image {
-  transform: scale(1.52);
+  transform: scale(1.76);
 }
 
 .product-card--laisse-double:hover .product-image {
-  transform: scale(1.54);
+  transform: scale(1.86);
 }
 
 .product-card--brosse-vapeur:hover .product-image {
-  transform: scale(1.46);
+  transform: scale(1.74);
 }
 
 .product-lightbox-dialog {
   width: min(960px, 100%);
+  overflow: hidden;
+}
+
+/* Lightbox produit : cadre carré, crop des bordures intégrées */
+.product-lightbox .marteder-lightbox-image {
+  width: min(88vw, 640px);
+  height: min(70vh, 640px);
+  max-height: min(70vh, 640px);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(1.55);
+  transform-origin: center center;
+  background: #fff;
+  border-radius: 0;
 }
 
 .product-lightbox .marteder-lightbox-prev {

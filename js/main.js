@@ -69,7 +69,7 @@ const products = {
   },
   'collier-gps-4g': {
     name: 'Collier de Suivi GPS 4G Étanche pour Chien & Chat',
-    price: 49,
+    price: 49.5,
     supplierSku: 'ANIMO-COLLIER-GPS-4G',
     supplier: 'AnimoSuisse',
     stripeProduct: 'collier-gps-4g',
@@ -130,7 +130,7 @@ const STRIPE_PRODUCTS = {
     paymentLink: 'https://buy.stripe.com/fZueVe4AF83e4W31sfcAo06',
   },
   'collier-gps-4g': {
-    unitPrice: 49,
+    unitPrice: 49.5,
     label: 'Collier de Suivi GPS 4G Étanche pour Chien & Chat',
     supplierSku: 'ANIMO-COLLIER-GPS-4G',
     supplier: 'AnimoSuisse',

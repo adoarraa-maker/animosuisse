@@ -62,7 +62,7 @@ const CATALOG = {
   },
   'collier-gps-4g': {
     name: 'Collier de Suivi GPS 4G Étanche pour Chien & Chat',
-    unitAmountCents: 4900,
+    unitAmountCents: 4950,
     supplierSku: 'ANIMO-COLLIER-GPS-4G',
     supplier: 'AnimoSuisse',
   },

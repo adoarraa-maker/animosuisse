@@ -149,6 +149,7 @@ const STRIPE_PRODUCTS = {
     label: 'Laisse Double Réfléchissante 360° pour Chiens',
     supplierSku: 'ANIMO-LAISSE-DOUBLE-360',
     supplier: 'AnimoSuisse',
+    paymentLink: 'https://buy.stripe.com/4gM7sM8QVdnybkr8UHcAo0e',
   },
 };
 

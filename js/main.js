@@ -24,7 +24,7 @@ const products = {
     supplierSku: 'ANIMO-BROSSE-VAPEUR-3EN1',
     supplier: 'AnimoSuisse',
     stripeProduct: 'brosse-vapeur',
-    image: 'images/hero-brosse-vapeur.png',
+    image: 'images/brosse-vapeur-jaune-orange.png',
   },
   'gourde-chien-3en1': {
     name: 'Gourde Multifonction 3-en-1 pour Chien (Eau, Croquettes & Sacs)',

@@ -910,6 +910,27 @@ body > .skiptranslate {
   grid-template-columns: repeat(3, 1fr);
 }
 
+/* Recadrage brosse vapeur : masque bordures noires / bandes de capture */
+.product-card--brosse-vapeur .product-image-wrap {
+  background: #fff;
+}
+
+.product-card--brosse-vapeur .product-image,
+.product-card--brosse-vapeur .product-thumb img {
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(1.18);
+  transform-origin: center center;
+}
+
+.product-card--brosse-vapeur:hover .product-image {
+  transform: scale(1.24);
+}
+
+.product-card--brosse-vapeur .product-thumbs {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .product-thumbs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

@@ -2218,34 +2218,47 @@ function initProductLightbox() {
   const lightbox = document.getElementById('productLightbox');
   const image = document.getElementById('productLightboxImage');
   const caption = document.getElementById('productLightboxCaption');
-  const triggers = Array.from(document.querySelectorAll('[data-product-zoom]'));
-  const galleryItems = Array.from(document.querySelectorAll('[data-product-gallery]'));
-  if (!lightbox || !image || !caption || triggers.length === 0) return;
+  if (!lightbox || !image || !caption) return;
 
   const closeButton = lightbox.querySelector('.marteder-lightbox-close');
   const previousButton = lightbox.querySelector('[data-product-lightbox-prev]');
   const nextButton = lightbox.querySelector('[data-product-lightbox-next]');
-  let lastTrigger = null;
+  let lastFocus = null;
   let galleryTriggers = [];
   let galleryIndex = 0;
 
-  const showTrigger = (trigger) => {
-    const sourceImage = trigger.querySelector('img')
-      || trigger.closest('.product-zoom-wrap')?.querySelector('img');
-    if (!sourceImage) return;
-
-    const galleryPhoto = trigger.dataset.imageKey
-      ? mecheImages[trigger.dataset.imageKey]
-      : null;
-    image.src = galleryPhoto?.src || sourceImage.currentSrc || sourceImage.src;
-    image.alt = galleryPhoto?.alt || sourceImage.alt;
-    caption.textContent = trigger.dataset.caption || sourceImage.alt;
+  const showImage = (src, alt = '', captionText = '') => {
+    if (!src) return;
+    image.src = src;
+    image.alt = alt || '';
+    caption.textContent = captionText || alt || '';
   };
 
-  const openLightbox = (trigger) => {
-    lastTrigger = trigger;
+  const showTrigger = (trigger) => {
+    if (!trigger) return;
+    if (trigger instanceof HTMLImageElement) {
+      showImage(trigger.currentSrc || trigger.src, trigger.alt, trigger.alt);
+      return;
+    }
+    const sourceImage = trigger.querySelector?.('img')
+      || trigger.closest?.('.product-zoom-wrap')?.querySelector('img');
+    if (!sourceImage) return;
 
-    const galleryName = trigger.dataset.productGallery;
+    const galleryPhoto = trigger.dataset?.imageKey
+      ? mecheImages[trigger.dataset.imageKey]
+      : null;
+    showImage(
+      galleryPhoto?.src || sourceImage.currentSrc || sourceImage.src,
+      galleryPhoto?.alt || sourceImage.alt,
+      trigger.dataset?.caption || sourceImage.alt
+    );
+  };
+
+  const openLightbox = (triggerOrImg) => {
+    lastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    const galleryName = triggerOrImg?.dataset?.productGallery;
+    const galleryItems = Array.from(document.querySelectorAll('[data-product-gallery]'));
     galleryTriggers = galleryName
       ? galleryItems
         .filter((item) => (
@@ -2253,16 +2266,16 @@ function initProductLightbox() {
           && !item.hasAttribute('data-gallery-exclude')
         ))
         .sort((a, b) => Number(a.dataset.galleryIndex) - Number(b.dataset.galleryIndex))
-      : [trigger];
+      : [triggerOrImg];
 
-    const requestedIndex = trigger.dataset.galleryStartIndex;
+    const requestedIndex = triggerOrImg?.dataset?.galleryStartIndex;
     const requestedPosition = requestedIndex === undefined
-      ? galleryTriggers.indexOf(trigger)
+      ? galleryTriggers.indexOf(triggerOrImg)
       : galleryTriggers.findIndex((item) => item.dataset.galleryIndex === requestedIndex);
-    galleryIndex = Math.max(0, requestedPosition);
+    galleryIndex = Math.max(0, requestedPosition === -1 ? 0 : requestedPosition);
 
-    showTrigger(galleryTriggers[galleryIndex]);
-    const hasNavigation = galleryTriggers.length > 1;
+    showTrigger(galleryTriggers[galleryIndex] || triggerOrImg);
+    const hasNavigation = galleryTriggers.length > 1 && !(galleryTriggers[0] instanceof HTMLImageElement);
     if (previousButton) previousButton.hidden = !hasNavigation;
     if (nextButton) nextButton.hidden = !hasNavigation;
     lightbox.hidden = false;
@@ -2281,11 +2294,21 @@ function initProductLightbox() {
     lightbox.hidden = true;
     lightbox.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-    lastTrigger?.focus();
+    image.removeAttribute('src');
+    lastFocus?.focus?.();
   };
 
-  triggers.forEach((trigger) => {
+  document.querySelectorAll('[data-product-zoom]').forEach((trigger) => {
     trigger.addEventListener('click', () => openLightbox(trigger));
+  });
+
+  document.addEventListener('dblclick', (event) => {
+    const img = event.target.closest(
+      '.product-card .product-image, .product-card [data-product-main], .product-card .product-thumb img'
+    );
+    if (!(img instanceof HTMLImageElement)) return;
+    event.preventDefault();
+    openLightbox(img);
   });
 
   lightbox.querySelectorAll('[data-product-lightbox-close]').forEach((element) => {

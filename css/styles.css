@@ -836,6 +836,7 @@ body > .skiptranslate {
   object-fit: cover;
   object-position: center;
   transition: transform 0.6s ease;
+  cursor: zoom-in;
 }
 
 /* Recadrage collier GPS : masque bordures noires / bandes de capture */
@@ -944,7 +945,7 @@ body > .skiptranslate {
   border-radius: 10px;
   padding: 0;
   overflow: hidden;
-  cursor: pointer;
+  cursor: zoom-in;
   background: var(--color-bg-alt);
   aspect-ratio: 1 / 1;
   transition: border-color 0.2s ease, transform 0.2s ease;

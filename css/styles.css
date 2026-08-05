@@ -906,8 +906,15 @@ body > .skiptranslate {
 
 .product-card--brosse-vapeur .product-image,
 .product-card--brosse-vapeur .product-thumb img {
-  transform: scale(1.7);
-  object-position: center 46%;
+  transform: scale(1.9);
+  object-position: center 44%;
+}
+
+/* Capture écran téléphone (coloris Vert) : rogne barre statut + boutons bas */
+.product-card--brosse-vapeur .product-image[src*="hero-brosse"],
+.product-card--brosse-vapeur .product-thumb img[src*="hero-brosse"] {
+  transform: scale(2.15);
+  object-position: center 40%;
 }
 
 .product-card--collier-gps .product-thumbs {
@@ -937,12 +944,12 @@ body > .skiptranslate {
 .product-image--brosse-crop {
   object-fit: cover;
   object-position: center 42%;
-  transform: scale(1.7);
+  transform: scale(1.9);
   transform-origin: center center;
 }
 
 .product-card:hover .product-image--brosse-crop {
-  transform: scale(1.76);
+  transform: scale(1.96);
 }
 
 .product-card:hover .product-image {
@@ -962,26 +969,55 @@ body > .skiptranslate {
 }
 
 .product-card--brosse-vapeur:hover .product-image {
-  transform: scale(1.74);
+  transform: scale(1.96);
+}
+
+.product-card--brosse-vapeur:hover .product-image[src*="hero-brosse"] {
+  transform: scale(2.2);
 }
 
 .product-lightbox-dialog {
   width: min(960px, 100%);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-/* Lightbox produit : cadre carré, crop des bordures intégrées */
-.product-lightbox .marteder-lightbox-image {
+/* Lightbox : conteneur strict — overflow hidden + zoom interne */
+.product-lightbox-frame {
+  position: relative;
   width: min(88vw, 640px);
-  height: min(70vh, 640px);
-  max-height: min(70vh, 640px);
   aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #fff;
+  isolation: isolate;
+}
+
+.product-lightbox-frame .marteder-lightbox-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
   object-fit: cover;
   object-position: center center;
-  transform: scale(1.55);
+  transform: scale(1.15);
   transform-origin: center center;
-  background: #fff;
   border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+/* Brosse vapeur : zoom lightbox plus fort pour masquer UI téléphone */
+.product-lightbox--brosse .product-lightbox-frame .marteder-lightbox-image {
+  transform: scale(1.55);
+  object-position: center 42%;
+}
+
+.product-lightbox--brosse .product-lightbox-frame .marteder-lightbox-image[src*="hero-brosse"] {
+  transform: scale(2.1);
+  object-position: center 40%;
 }
 
 .product-lightbox .marteder-lightbox-prev {

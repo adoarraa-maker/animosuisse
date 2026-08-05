@@ -80,7 +80,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=20260805-img-crop2">
+  <link rel="stylesheet" href="css/styles.css?v=20260805-lightbox-crop">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -1410,14 +1410,16 @@
       <button type="button" class="marteder-lightbox-close" data-product-lightbox-close aria-label="Fermer">×</button>
       <button type="button" class="marteder-lightbox-nav marteder-lightbox-prev" data-product-lightbox-prev aria-label="Image précédente" hidden>‹</button>
       <button type="button" class="marteder-lightbox-nav marteder-lightbox-next" data-product-lightbox-next aria-label="Image suivante" hidden>›</button>
-      <img id="productLightboxImage" class="marteder-lightbox-image" src="" alt="">
+      <div class="product-lightbox-frame">
+        <img id="productLightboxImage" class="marteder-lightbox-image" src="" alt="">
+      </div>
       <p id="productLightboxCaption" class="marteder-lightbox-caption"></p>
       <p id="productLightboxCounter" class="product-lightbox-counter" hidden></p>
     </div>
   </div>
 
   <script src="js/stripe-config.js?v=20260803-cart-live"></script>
-  <script src="js/main.js?v=20260805-laisse-fix"></script>
+  <script src="js/main.js?v=20260805-lightbox-crop"></script>
   <script src="js/i18n-translate.js?v=101"></script>
   <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>

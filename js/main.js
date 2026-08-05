@@ -2291,12 +2291,22 @@ function initProductLightbox() {
     updateCounter();
   };
 
+  const setLightboxProduct = (card) => {
+    const productId = card?.dataset?.productId || '';
+    lightbox.dataset.productId = productId;
+    lightbox.classList.toggle('product-lightbox--brosse', productId === 'brosse-vapeur');
+    lightbox.classList.toggle('product-lightbox--collier', productId === 'collier-gps-4g');
+    lightbox.classList.toggle('product-lightbox--laisse', productId === 'laisse-double-360');
+  };
+
   const openLightbox = (startImg) => {
     lastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const card = startImg?.closest?.('.product-card');
     const preferredSrc = startImg instanceof HTMLImageElement
       ? startImg.currentSrc || startImg.src
       : '';
+
+    setLightboxProduct(card);
 
     galleryItems = collectCardGallery(card, preferredSrc);
     if (!galleryItems.length && preferredSrc) {
@@ -2331,6 +2341,7 @@ function initProductLightbox() {
       ? mecheImages[trigger.dataset.imageKey]
       : null;
     if (galleryPhoto?.src) {
+      setLightboxProduct(null);
       galleryItems = [{ src: normalizeSrc(galleryPhoto.src), alt: galleryPhoto.alt || trigger.dataset.caption || '' }];
       if (previousButton) previousButton.hidden = true;
       if (nextButton) nextButton.hidden = true;
@@ -2352,6 +2363,12 @@ function initProductLightbox() {
     lightbox.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
     image.removeAttribute('src');
+    lightbox.removeAttribute('data-product-id');
+    lightbox.classList.remove(
+      'product-lightbox--brosse',
+      'product-lightbox--collier',
+      'product-lightbox--laisse'
+    );
     if (counter) {
       counter.hidden = true;
       counter.textContent = '';

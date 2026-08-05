@@ -60,6 +60,12 @@ const CATALOG = {
     supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
     supplier: 'AnimoSuisse',
   },
+  'collier-gps-4g': {
+    name: 'Collier de Suivi GPS 4G Étanche pour Chien & Chat',
+    unitAmountCents: 4900,
+    supplierSku: 'ANIMO-COLLIER-GPS-4G',
+    supplier: 'AnimoSuisse',
+  },
 };
 
 const SHIPPING_BY_SHOP = {

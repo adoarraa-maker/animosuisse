@@ -67,6 +67,14 @@ const products = {
     stripeProduct: 'laisse-course-mains-libres',
     image: 'images/course-mains-libres-1.jpg',
   },
+  'collier-gps-4g': {
+    name: 'Collier de Suivi GPS 4G Étanche pour Chien & Chat',
+    price: 49,
+    supplierSku: 'ANIMO-COLLIER-GPS-4G',
+    supplier: 'AnimoSuisse',
+    stripeProduct: 'collier-gps-4g',
+    image: 'images/collier-gps-app.png',
+  },
 };
 
 const STRIPE_PRODUCTS = {
@@ -120,6 +128,13 @@ const STRIPE_PRODUCTS = {
     supplierSku: 'ANIMO-LAISSE-COURSE-MAINS-LIBRES',
     supplier: 'AnimoSuisse',
     paymentLink: 'https://buy.stripe.com/fZueVe4AF83e4W31sfcAo06',
+  },
+  'collier-gps-4g': {
+    unitPrice: 49,
+    label: 'Collier de Suivi GPS 4G Étanche pour Chien & Chat',
+    supplierSku: 'ANIMO-COLLIER-GPS-4G',
+    supplier: 'AnimoSuisse',
+    paymentLink: 'https://buy.stripe.com/dRm3cw0kp0AM3RZgn9cAo0d',
   },
 };
 

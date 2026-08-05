@@ -19,6 +19,7 @@ window.ANIMO_STRIPE_PAYMENT_LINKS = window.ANIMO_STRIPE_PAYMENT_LINKS || {
   'jouet-chat-cable': 'https://buy.stripe.com/bJe14o1ot4R20FN7QDcAo08',
   'laisse-retractable-led': 'https://buy.stripe.com/bJe4gA4AFcjugELef1cAo09',
   'laisse-course-mains-libres': 'https://buy.stripe.com/fZueVe4AF83e4W31sfcAo06',
+  'collier-gps-4g': 'https://buy.stripe.com/dRm3cw0kp0AM3RZgn9cAo0d',
 };
 
 // Netlify Checkout Session (panier multi-produits, Live)

@@ -838,6 +838,37 @@ body > .skiptranslate {
   transition: transform 0.6s ease;
 }
 
+/* Recadrage collier GPS : masque bordures noires / bandes de capture */
+.product-card--collier-gps .product-image-wrap {
+  background: #fff;
+}
+
+.product-card--collier-gps .product-image,
+.product-card--collier-gps .product-thumb img {
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(1.14);
+  transform-origin: center center;
+}
+
+.product-card--collier-gps .product-thumbs {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.product-card--collier-gps .product-description--teaser {
+  margin: 0.35rem 0 0.15rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.product-card--collier-gps .product-description--teaser strong {
+  display: block;
+  color: var(--color-text);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
 /* Recadrage brosse vapeur : masque barres/icônes téléphone haut & bas */
 .product-image--brosse-crop {
   object-fit: cover;
@@ -852,6 +883,10 @@ body > .skiptranslate {
 
 .product-card:hover .product-image {
   transform: scale(1.06);
+}
+
+.product-card--collier-gps:hover .product-image {
+  transform: scale(1.2);
 }
 
 .product-thumbs {

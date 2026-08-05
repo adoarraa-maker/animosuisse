@@ -510,6 +510,7 @@
                 class="product-image product-image--brosse-crop"
                 src="images/hero-brosse-vapeur.png"
                 alt="Brosse Vapeur 3-en-1 pour Chats et Chiens — AnimoSuisse"
+                data-product-main
                 loading="lazy"
                 decoding="async"
                 onerror="this.onerror=null;this.src='images/produit-brosse-vapeur.jpg'"
@@ -523,6 +524,50 @@
               </p>
               <h3 class="product-name">Brosse Vapeur 3-en-1 pour Chats et Chiens</h3>
               <div class="product-price"><span class="current">24.90 CHF</span></div>
+              <div class="fabric-variants product-color-variants" data-product-colors>
+                <p class="variant-label" id="brosseVapeurColorLabel">Couleur</p>
+                <div class="color-swatch-list" role="listbox" aria-labelledby="brosseVapeurColorLabel">
+                  <button
+                    type="button"
+                    class="color-swatch active"
+                    role="option"
+                    aria-selected="true"
+                    data-color-key="jaune-orange"
+                    data-color-label="Jaune / Orange"
+                    data-color-image="images/hero-brosse-vapeur.png"
+                    data-supplier-variant="Jaune / Orange"
+                    title="Jaune / Orange"
+                    style="--swatch:#f0a020"
+                  ><span class="color-swatch-dot" aria-hidden="true"></span><span class="color-swatch-name">Jaune / Orange</span></button>
+                  <button
+                    type="button"
+                    class="color-swatch"
+                    role="option"
+                    aria-selected="false"
+                    data-color-key="blanc-gris"
+                    data-color-label="Blanc / Gris"
+                    data-color-image="images/produit-brosse-vapeur.jpg"
+                    data-supplier-variant="Blanc / Gris"
+                    title="Blanc / Gris"
+                    style="--swatch:#d8d8d8"
+                  ><span class="color-swatch-dot" aria-hidden="true"></span><span class="color-swatch-name">Blanc / Gris</span></button>
+                  <button
+                    type="button"
+                    class="color-swatch"
+                    role="option"
+                    aria-selected="false"
+                    data-color-key="vert"
+                    data-color-label="Vert"
+                    data-color-image="images/brosse-spray.jpg"
+                    data-supplier-variant="Vert"
+                    title="Vert"
+                    style="--swatch:#2e7d32"
+                  ><span class="color-swatch-dot" aria-hidden="true"></span><span class="color-swatch-name">Vert</span></button>
+                </div>
+                <p class="variant-selected" data-color-preview>
+                  Couleur sélectionnée : <strong>Jaune / Orange</strong>
+                </p>
+              </div>
               <details class="product-more">
                 <summary class="product-more-toggle">En savoir plus</summary>
                 <div class="product-more-body">
@@ -1345,7 +1390,7 @@
   </button>
 
   <script src="js/stripe-config.js?v=20260803-cart-live"></script>
-  <script src="js/main.js?v=20260805-collier-colors"></script>
+  <script src="js/main.js?v=20260805-brosse-colors"></script>
   <script src="js/i18n-translate.js?v=101"></script>
   <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>

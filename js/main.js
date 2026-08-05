@@ -2218,76 +2218,133 @@ function initProductLightbox() {
   const lightbox = document.getElementById('productLightbox');
   const image = document.getElementById('productLightboxImage');
   const caption = document.getElementById('productLightboxCaption');
+  const counter = document.getElementById('productLightboxCounter');
   if (!lightbox || !image || !caption) return;
 
   const closeButton = lightbox.querySelector('.marteder-lightbox-close');
   const previousButton = lightbox.querySelector('[data-product-lightbox-prev]');
   const nextButton = lightbox.querySelector('[data-product-lightbox-next]');
   let lastFocus = null;
-  let galleryTriggers = [];
+  let galleryItems = [];
   let galleryIndex = 0;
 
-  const showImage = (src, alt = '', captionText = '') => {
-    if (!src) return;
-    image.src = src;
-    image.alt = alt || '';
-    caption.textContent = captionText || alt || '';
+  const normalizeSrc = (src) => {
+    try {
+      return new URL(src, window.location.href).href;
+    } catch {
+      return String(src || '');
+    }
   };
 
-  const showTrigger = (trigger) => {
-    if (!trigger) return;
-    if (trigger instanceof HTMLImageElement) {
-      showImage(trigger.currentSrc || trigger.src, trigger.alt, trigger.alt);
+  const collectCardGallery = (card, preferredSrc = '') => {
+    if (!card) return [];
+    const items = [];
+    const seen = new Set();
+
+    const pushItem = (src, alt = '') => {
+      const normalized = normalizeSrc(src);
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      items.push({ src: normalized, alt: alt || '' });
+    };
+
+    const main = card.querySelector('[data-product-main], .product-image');
+    if (main instanceof HTMLImageElement) {
+      pushItem(main.currentSrc || main.src, main.alt);
+    }
+
+    card.querySelectorAll('.product-thumb').forEach((thumb) => {
+      const src = thumb.getAttribute('data-thumb-src') || thumb.querySelector('img')?.src;
+      const alt = thumb.getAttribute('data-thumb-alt') || thumb.querySelector('img')?.alt || '';
+      pushItem(src, alt);
+    });
+
+    card.querySelectorAll('.color-swatch[data-color-image]').forEach((swatch) => {
+      pushItem(swatch.dataset.colorImage, swatch.dataset.colorLabel || swatch.title || '');
+    });
+
+    if (!items.length && preferredSrc) {
+      pushItem(preferredSrc);
+    }
+
+    return items;
+  };
+
+  const updateCounter = () => {
+    if (!counter) return;
+    if (galleryItems.length < 2) {
+      counter.hidden = true;
+      counter.textContent = '';
       return;
     }
-    const sourceImage = trigger.querySelector?.('img')
-      || trigger.closest?.('.product-zoom-wrap')?.querySelector('img');
-    if (!sourceImage) return;
-
-    const galleryPhoto = trigger.dataset?.imageKey
-      ? mecheImages[trigger.dataset.imageKey]
-      : null;
-    showImage(
-      galleryPhoto?.src || sourceImage.currentSrc || sourceImage.src,
-      galleryPhoto?.alt || sourceImage.alt,
-      trigger.dataset?.caption || sourceImage.alt
-    );
+    counter.hidden = false;
+    counter.textContent = `${galleryIndex + 1} / ${galleryItems.length}`;
   };
 
-  const openLightbox = (triggerOrImg) => {
+  const showIndex = (index) => {
+    if (!galleryItems.length) return;
+    galleryIndex = (index + galleryItems.length) % galleryItems.length;
+    const item = galleryItems[galleryIndex];
+    image.src = item.src;
+    image.alt = item.alt || '';
+    caption.textContent = item.alt || '';
+    updateCounter();
+  };
+
+  const openLightbox = (startImg) => {
     lastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const card = startImg?.closest?.('.product-card');
+    const preferredSrc = startImg instanceof HTMLImageElement
+      ? startImg.currentSrc || startImg.src
+      : '';
 
-    const galleryName = triggerOrImg?.dataset?.productGallery;
-    const galleryItems = Array.from(document.querySelectorAll('[data-product-gallery]'));
-    galleryTriggers = galleryName
-      ? galleryItems
-        .filter((item) => (
-          item.dataset.productGallery === galleryName
-          && !item.hasAttribute('data-gallery-exclude')
-        ))
-        .sort((a, b) => Number(a.dataset.galleryIndex) - Number(b.dataset.galleryIndex))
-      : [triggerOrImg];
+    galleryItems = collectCardGallery(card, preferredSrc);
+    if (!galleryItems.length && preferredSrc) {
+      galleryItems = [{ src: normalizeSrc(preferredSrc), alt: startImg?.alt || '' }];
+    }
+    if (!galleryItems.length) return;
 
-    const requestedIndex = triggerOrImg?.dataset?.galleryStartIndex;
-    const requestedPosition = requestedIndex === undefined
-      ? galleryTriggers.indexOf(triggerOrImg)
-      : galleryTriggers.findIndex((item) => item.dataset.galleryIndex === requestedIndex);
-    galleryIndex = Math.max(0, requestedPosition === -1 ? 0 : requestedPosition);
+    const preferred = normalizeSrc(preferredSrc);
+    const startIndex = preferred
+      ? Math.max(0, galleryItems.findIndex((item) => item.src === preferred))
+      : 0;
 
-    showTrigger(galleryTriggers[galleryIndex] || triggerOrImg);
-    const hasNavigation = galleryTriggers.length > 1 && !(galleryTriggers[0] instanceof HTMLImageElement);
+    const hasNavigation = galleryItems.length > 1;
     if (previousButton) previousButton.hidden = !hasNavigation;
     if (nextButton) nextButton.hidden = !hasNavigation;
+
+    showIndex(startIndex);
     lightbox.hidden = false;
     lightbox.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
     closeButton?.focus();
   };
 
+  const openFromZoomTrigger = (trigger) => {
+    const sourceImage = trigger.querySelector('img')
+      || trigger.closest('.product-zoom-wrap')?.querySelector('img');
+    if (sourceImage instanceof HTMLImageElement) {
+      openLightbox(sourceImage);
+      return;
+    }
+    const galleryPhoto = trigger.dataset?.imageKey
+      ? mecheImages[trigger.dataset.imageKey]
+      : null;
+    if (galleryPhoto?.src) {
+      galleryItems = [{ src: normalizeSrc(galleryPhoto.src), alt: galleryPhoto.alt || trigger.dataset.caption || '' }];
+      if (previousButton) previousButton.hidden = true;
+      if (nextButton) nextButton.hidden = true;
+      showIndex(0);
+      lightbox.hidden = false;
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      closeButton?.focus();
+    }
+  };
+
   const navigateGallery = (direction) => {
-    if (galleryTriggers.length < 2) return;
-    galleryIndex = (galleryIndex + direction + galleryTriggers.length) % galleryTriggers.length;
-    showTrigger(galleryTriggers[galleryIndex]);
+    if (galleryItems.length < 2) return;
+    showIndex(galleryIndex + direction);
   };
 
   const closeLightbox = () => {
@@ -2295,11 +2352,15 @@ function initProductLightbox() {
     lightbox.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
     image.removeAttribute('src');
+    if (counter) {
+      counter.hidden = true;
+      counter.textContent = '';
+    }
     lastFocus?.focus?.();
   };
 
   document.querySelectorAll('[data-product-zoom]').forEach((trigger) => {
-    trigger.addEventListener('click', () => openLightbox(trigger));
+    trigger.addEventListener('click', () => openFromZoomTrigger(trigger));
   });
 
   document.addEventListener('dblclick', (event) => {
@@ -2314,8 +2375,14 @@ function initProductLightbox() {
   lightbox.querySelectorAll('[data-product-lightbox-close]').forEach((element) => {
     element.addEventListener('click', closeLightbox);
   });
-  previousButton?.addEventListener('click', () => navigateGallery(-1));
-  nextButton?.addEventListener('click', () => navigateGallery(1));
+  previousButton?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    navigateGallery(-1);
+  });
+  nextButton?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    navigateGallery(1);
+  });
 
   document.addEventListener('keydown', (event) => {
     if (lightbox.hidden) return;
